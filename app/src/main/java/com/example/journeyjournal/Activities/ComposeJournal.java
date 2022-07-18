@@ -9,12 +9,18 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.journeyjournal.Adapters.JournalsAdapter;
+import com.example.journeyjournal.Adapters.ReminderAdapter;
 import com.example.journeyjournal.ParseConnectorFiles.Journals;
+import com.example.journeyjournal.ParseConnectorFiles.Reminder;
 import com.example.journeyjournal.R;
 import com.example.journeyjournal.ShakeListener;
 import com.parse.ParseException;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ComposeJournal extends AppCompatActivity implements ShakeListener.Callback {
 
@@ -22,6 +28,9 @@ public class ComposeJournal extends AppCompatActivity implements ShakeListener.C
     TextView etJournalTitle;
     TextView tvEntry;
     Button btnAddEntry;
+    protected JournalsAdapter adapter;
+    protected List<Journals> allJournals;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,6 +40,8 @@ public class ComposeJournal extends AppCompatActivity implements ShakeListener.C
         tvEntry = findViewById(R.id.etEntry);
         etJournalTitle = findViewById(R.id.etJournalTitle);
         btnAddEntry = findViewById(R.id.btnAddEntry);
+        allJournals = new ArrayList<>();
+        adapter = new JournalsAdapter(this, allJournals);
 
         btnAddEntry.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -55,6 +66,20 @@ public class ComposeJournal extends AppCompatActivity implements ShakeListener.C
         journal.setTitle(title);
         journal.setEntry(entry);
         journal.setUser(ParseUser.getCurrentUser());
+        journal.pinAllInBackground(allJournals, new SaveCallback() {
+            @Override
+            public void done(ParseException e) {
+                if (e != null) {
+                    Log.e(TAG, "Error adding journal", e);
+                    return;
+                }
+                etJournalTitle.setText("");
+                tvEntry.setText("");
+                Log.i(TAG, "Post was successful");
+                finish();
+            }
+        });
+
         journal.saveInBackground(new SaveCallback() {
             @Override
             public void done(ParseException e) {
@@ -62,9 +87,6 @@ public class ComposeJournal extends AppCompatActivity implements ShakeListener.C
                     Log.e(TAG, "Error while saving", e);
                     Toast.makeText(ComposeJournal.this, "Error while saving", Toast.LENGTH_SHORT).show();
                 }
-                Log.i(TAG, "Post was successful");
-                etJournalTitle.setText("");
-                tvEntry.setText("");
             }
         });
 

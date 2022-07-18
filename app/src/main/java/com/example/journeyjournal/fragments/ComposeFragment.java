@@ -1,6 +1,9 @@
 package com.example.journeyjournal.fragments;
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -15,6 +18,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.Toast;
 
 import com.example.journeyjournal.Activities.ComposeJournal;
 import com.example.journeyjournal.ParseConnectorFiles.Journals;
@@ -41,13 +45,19 @@ public class ComposeFragment extends Fragment {
         // Required empty public constructor
     }
 
+
     @Override
     public void onResume() {
         super.onResume();
-        // query journals from the database
-        Log.i(TAG, "onResume");
-        adapter.clear();
-        queryJournals();
+        ConnectivityManager connManager = (ConnectivityManager) requireActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        if(wifi.isConnected()){
+            // query posts from the database
+            Log.i(TAG, "onResume");
+            adapter.clear();
+            queryJournals();
+        } else {
+            querySavedJournals();}
     }
 
     @Override
@@ -61,6 +71,9 @@ public class ComposeFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        ConnectivityManager connManager = (ConnectivityManager) getActivity().getSystemService(getContext().CONNECTIVITY_SERVICE);
+        NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+
         ibAddJournal = view.findViewById(R.id.ibAddJournal);
         rvJournals = view.findViewById(R.id.rvJournals);
 
@@ -71,9 +84,11 @@ public class ComposeFragment extends Fragment {
         // set the layout manager on the recycler view
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
         rvJournals.setLayoutManager(linearLayoutManager);
-        //rvPosts.setLayoutManager(new LinearLayoutManager(this));
-        // query posts from Parse SDK
-        queryJournals();
+        // query posts from Parse SDK if there is wifi
+        if(wifi.isConnected()){
+            queryJournals();
+        } else {
+            querySavedJournals();}
 
         swipeContainer = (SwipeRefreshLayout) view.findViewById(R.id.swipeContainer);
         // Setup refresh listener which triggers new data loading
@@ -83,8 +98,15 @@ public class ComposeFragment extends Fragment {
                 // Your code to refresh the list here.
                 // Make sure you call swipeContainer.setRefreshing(false)
                 // once the network request has completed successfully.
-
-                queryJournals();
+                ConnectivityManager connManager = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+                NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+                if(wifi.isConnected()){
+                    // query posts from the database
+                    Log.i(TAG, "onResume");
+                    adapter.clear();
+                    queryJournals();
+                } else {
+                    querySavedJournals();}
             }
         });
         // Configure the refreshing colors
@@ -96,8 +118,12 @@ public class ComposeFragment extends Fragment {
         ibAddJournal.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-               Intent intent = new Intent(getContext(), ComposeJournal.class);
-               startActivity(intent);
+                if (wifi.isConnected()) {
+                    Intent intent = new Intent(getContext(), ComposeJournal.class);
+                    startActivity(intent);
+                } else{
+                    Toast.makeText(getContext(), "Please connect to the internet", Toast.LENGTH_LONG).show();
+                }
             }});
     }
 
@@ -109,7 +135,7 @@ public class ComposeFragment extends Fragment {
         query.include(Journals.KEY_USER);
         // limit query to latest 20 items
         query.setLimit(20);
-        query.whereEqualTo("user", ParseUser.getCurrentUser());
+        query.whereEqualTo(Journals.KEY_USER, ParseUser.getCurrentUser());
         // order posts by creation date (newest first)
         query.addDescendingOrder("createdAt");
         // start an asynchronous call for posts
@@ -124,7 +150,7 @@ public class ComposeFragment extends Fragment {
 
                 // for debugging purposes let's print every post description to logcat
                 for (Journals journal : journals) {
-                    Log.i(TAG, "Post: " + journal.getTitle() + ", username: " + journal.getEntry());
+                    Log.i(TAG, "Post: " + journal.getTitle() + ", username: " + journal.getUser().getUsername());
                 }
 
                 // save received posts to list and notify adapter of new data
@@ -138,5 +164,31 @@ public class ComposeFragment extends Fragment {
         });
     }
 
+    private void querySavedJournals(){
+        ParseQuery<Journals> query = ParseQuery.getQuery(Journals.class);
+        query.include(Journals.KEY_USER);
+        query.whereEqualTo(Journals.KEY_USER, ParseUser.getCurrentUser());
+        query.fromLocalDatastore();
+        query.addDescendingOrder("createdAt");
+        query.findInBackground(new FindCallback<Journals>() {
+            @Override
+            public void done(List<Journals> journal, ParseException e) {
+                // check for failure
+                if (e != null) {
+                    Log.e(TAG, "Failure to load saved reminders", e);
+                    return;
+                }
+                // prints every reminder description for debugging purposes
+                for (Journals journals : journal){
+                    Log.i(TAG, "Journal: " + journals.getEntry() + ", username: " + journals.getUser().getUsername());
+                    Log.i(TAG, "Saved in database");
+                }
+                // save received comments to list and notify adapter of change
+                allJournals.clear();
+                allJournals.addAll(journal);
+                adapter.notifyDataSetChanged();
+                swipeContainer.setRefreshing(false);
 
+            }
+    });}
 }
