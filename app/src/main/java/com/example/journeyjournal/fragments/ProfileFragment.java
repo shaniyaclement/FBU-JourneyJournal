@@ -1,8 +1,11 @@
 package com.example.journeyjournal.fragments;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -20,8 +23,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.bumptech.glide.Glide;
+import com.example.journeyjournal.Activities.ComposePostActivity;
+import com.example.journeyjournal.Activities.EditProfile;
 import com.example.journeyjournal.ParseConnectorFiles.User;
-import com.example.journeyjournal.Utilities.EndlessScrollListener;
 import com.example.journeyjournal.ParseConnectorFiles.Post;
 import com.example.journeyjournal.Adapters.ProfileAdapter;
 import com.example.journeyjournal.R;
@@ -34,6 +38,7 @@ import com.parse.ParseUser;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("deprecation")
 public class ProfileFragment extends HelperFragment {
     public static final String TAG = "ProfileFragment";
     private static final int RESULT_OK = -1;
@@ -42,16 +47,32 @@ public class ProfileFragment extends HelperFragment {
     ProfileAdapter adapter;
     List<Post> allPosts;
     SwipeRefreshLayout swipeContainer;
-    TextView tvNumPostsNum;
-    TextView tvUsernameProfile;
+    TextView tvPostsNum;
+    TextView tvProfileUsername;
     int numPostsByThisUser;
     ImageView ivProfileImageProfile;
     TextView tvBio;
     Button btnFollow;
+    Button btnEditProfile;
 
     public User user = (User) ParseUser.getCurrentUser();
+    int numsFollowers;
+    int numsFollowing;
+    TextView tvFollowersNum;
+    TextView tvFollowingNum;
+
 
     public ProfileFragment() {}
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // query posts from the database
+        Log.i(TAG, "onResume");
+        tvProfileUsername.setText("");
+        tvBio.setText("");
+        displayUserInfo();
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -68,6 +89,16 @@ public class ProfileFragment extends HelperFragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         rvProfile = view.findViewById(R.id.rvProfile);
+        ConnectivityManager connManager = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+
+        if(getActivity() == null){
+            Log.i(TAG, "grtActivity() is null");
+            return;
+        } else{
+            Log.i(TAG, "getActivity() is not null");
+
+        }
 
         allPosts = new ArrayList<>();
 
@@ -78,32 +109,59 @@ public class ProfileFragment extends HelperFragment {
         GridLayoutManager gridLayoutManager = new GridLayoutManager(getContext(), numberOfColumns);
 
         swipeContainer = view.findViewById(R.id.swipeContainer);
-        tvNumPostsNum = view.findViewById(R.id.tvNumPostsNum);
+        tvPostsNum = view.findViewById(R.id.tvPostsNum);
+        tvFollowersNum = view.findViewById(R.id.tvFollowersNum);
+        tvFollowingNum = view.findViewById(R.id.tvFollowingNum);
         ivProfileImageProfile = view.findViewById(R.id.ivProfileImageProfile);
-        tvUsernameProfile = view.findViewById(R.id.tvUsernameProfile);
+        tvProfileUsername = view.findViewById(R.id.tvProfileUsername);
         tvBio = view.findViewById(R.id.tvBio);
         btnFollow = view.findViewById(R.id.btnFollow);
+        btnEditProfile = view.findViewById(R.id.btnEditProfile);
+
+        btnEditProfile.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(wifi.isConnected()){
+                    Intent intent = new Intent(getContext(), EditProfile.class);
+                    startActivity(intent);
+                } else {
+                    Toast.makeText(getContext(), "Please connect to the internet", Toast.LENGTH_LONG).show();
+                }
+            }
+        });
 
         rvProfile.setLayoutManager(gridLayoutManager);
 
         swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                queryPosts(0);
-            }
+                if(wifi.isConnected()){
+                    queryPosts();
+                } else {
+                    querySavedPosts();
+                }            }
         });
 
         swipeContainer.setColorSchemeResources(android.R.color.holo_blue_bright,
                 android.R.color.holo_green_light,
                 android.R.color.holo_orange_light,
                 android.R.color.holo_red_light);
-
-        queryPosts(0);
+        if(wifi.isConnected()){
+            queryPosts();
+        } else {
+            querySavedPosts();
+        }
 
         ivProfileImageProfile.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                launchCamera();
+                ConnectivityManager connManager = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+                NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+                if(wifi.isConnected()){
+                    launchCamera();
+                } else {
+                    Toast.makeText(getContext(), "Please connect to the internet", Toast.LENGTH_LONG).show();
+                }
             }
         });
 
@@ -112,12 +170,12 @@ public class ProfileFragment extends HelperFragment {
     }
 
     private void displayUserInfo() {
-        tvUsernameProfile.setText(user.getUsername());
+        tvProfileUsername.setText(user.getUsername());
         tvBio.setText(user.getBio());
 
-        ParseFile profilePic = user.getProfilePic();
-        if (profilePic != null) {
-            Glide.with(this).load(profilePic.getUrl())
+        ParseFile profileImage = user.getProfileImage();
+        if (profileImage != null) {
+            Glide.with(this).load(profileImage.getUrl())
                     .circleCrop()
                     .into(ivProfileImageProfile);}
 
@@ -125,17 +183,18 @@ public class ProfileFragment extends HelperFragment {
             btnFollow.setVisibility(View.VISIBLE);
         } else {
             btnFollow.setVisibility(View.GONE);
+            btnEditProfile.setVisibility(View.VISIBLE);
         }
     }
 
-    protected void queryPosts(int i) {
+    protected void queryPosts() {
         ParseQuery<Post> query = ParseQuery.getQuery(Post.class);
 
         query.include(Post.KEY_USER);
         query.whereEqualTo(Post.KEY_USER, user);
 
         query.setLimit(20);
-        query.setSkip(i);
+        query.setSkip(0);
 
         query.addDescendingOrder(Post.KEY_CREATED_AT);
 
@@ -154,12 +213,64 @@ public class ProfileFragment extends HelperFragment {
                     Log.i(TAG, "Post: " + post.getDescription() + ", username: " + post.getUser().getUsername());
                 }
 
+                // sets Number of posts
                 numPostsByThisUser = posts.size();
-                tvNumPostsNum.setText(String.valueOf(numPostsByThisUser));
+                tvPostsNum.setText(String.valueOf(numPostsByThisUser));
+
+                //sets number of followers
+                numsFollowers = posts.size();
+                tvFollowersNum.setText(String.valueOf(numsFollowers));
+
+                //sets number of following
+                numsFollowing = posts.size();
+                tvFollowingNum.setText(String.valueOf(numsFollowing));
 
                 allPosts.clear();
                 allPosts.addAll(posts);
                 adapter.notifyDataSetChanged();
+
+            }
+        });
+    }
+
+    protected void querySavedPosts() {
+        ParseQuery<Post> query = ParseQuery.getQuery(Post.class);
+        query.include(Post.KEY_USER);
+        query.whereEqualTo(Post.KEY_USER, user);
+        query.addDescendingOrder("createdAt");
+        query.fromLocalDatastore();
+        query.findInBackground(new FindCallback<Post>() {
+            @Override
+            public void done(List<Post> posts, ParseException e) {
+                Log.i(TAG, posts.toString());
+
+                if (e != null) {
+                    Log.e(TAG, "Issue getting posts.", e);
+                    return;
+                }
+
+                // at this point, we have gotten the posts successfully
+                for (Post post : posts) {
+                    Log.i(TAG, "Post: " + post.getDescription() + ", username: " + post.getUser().getUsername());
+                }
+
+                // sets Number of posts
+                numPostsByThisUser = posts.size();
+                tvPostsNum.setText(String.valueOf(numPostsByThisUser));
+
+                //sets number of followers
+                numsFollowers = posts.size();
+                tvFollowersNum.setText(String.valueOf(numsFollowers));
+
+                //sets number of following
+                numsFollowing = posts.size();
+                tvFollowingNum.setText(String.valueOf(numsFollowing));
+
+                allPosts.clear();
+                allPosts.addAll(posts);
+                adapter.notifyDataSetChanged();
+                swipeContainer.setRefreshing(false);
+
 
             }
         });
@@ -176,8 +287,9 @@ public class ProfileFragment extends HelperFragment {
 
                 Glide.with(this).load(takenImage).circleCrop().into(ivProfileImageProfile);
 
+                // Add new profile image in parse
                 ParseFile newPic = new ParseFile(photoFile);
-                user.setProfilePic(newPic);
+                user.setProfileImage(newPic);
                 user.saveInBackground();
 
             } else {

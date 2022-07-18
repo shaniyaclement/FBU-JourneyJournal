@@ -3,22 +3,24 @@ package com.example.journeyjournal.Activities;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.example.journeyjournal.Adapters.PostsAdapter;
+import com.example.journeyjournal.Adapters.ReminderAdapter;
 import com.example.journeyjournal.ParseConnectorFiles.Post;
+import com.example.journeyjournal.ParseConnectorFiles.Reminder;
 import com.example.journeyjournal.ParseConnectorFiles.User;
 import com.example.journeyjournal.R;
-import com.parse.FindCallback;
 import com.parse.ParseException;
 import com.parse.ParseFile;
-import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.ImageDecoder;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -30,17 +32,25 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("deprecation")
 public class ComposePostActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity" ;
     private static final int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 42;
+    private static final int PICK_PHOTO_CODE = 1046;
     EditText etDescription;
     Button btnImage;
+    Button btnUpload;
     Button btnPost;
     ImageView ivImage;
-    private File photoFile;
+    protected PostsAdapter adapter;
+    protected List<Post> allPosts;
+
+    File photoFile;
     public String photoFileName = "photo.jpg";
 
     @Override
@@ -50,8 +60,12 @@ public class ComposePostActivity extends AppCompatActivity {
 
         etDescription = findViewById(R.id.etDescription);
         btnImage = findViewById(R.id.btnImage);
+        btnUpload = findViewById(R.id.btnUpload);
         btnPost = findViewById(R.id.btnPost);
         ivImage = findViewById(R.id.ivImage);
+
+        allPosts = new ArrayList<>();
+        adapter = new PostsAdapter(this, allPosts);
 
         btnPost.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -75,8 +89,16 @@ public class ComposePostActivity extends AppCompatActivity {
                 launchCamera();
             }
         });
+//        btnUpload.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//               onUploadPhoto();
+//            }
+//        });
 
     }
+
+
     // launches implicit intent to open the phone camera and take the photo for the post
     private void launchCamera() {
         // create Intent to take a picture and return control to the calling application
@@ -93,29 +115,12 @@ public class ComposePostActivity extends AppCompatActivity {
         // So as long as the result is not null, it's safe to use the intent.
         if (intent.resolveActivity(getPackageManager()) != null) {
             // Start the image capture intent to take photo
+            //noinspection deprecation
             startActivityForResult(intent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
         }
-        Throwable e = null;
-        if(e != null){
-            Log.e(TAG, "Error launching camera", e);}
     }
 
-    // adds image to imageView if photo is taken
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE) {
-            if (resultCode == RESULT_OK) {
-                // by this point we have the camera photo on disk
-                Bitmap takenImage = BitmapFactory.decodeFile(photoFile.getAbsolutePath());
-                // RESIZE BITMAP, see section below
-                // Load the taken image into a preview
-                ivImage.setImageBitmap(takenImage);
-            } else { // Result was a failure
-                Toast.makeText(this, "Picture wasn't taken!", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
+
 
     // Returns the File for a photo stored on disk given the fileName
     private File getPhotoFileUri(String fileName) {
@@ -129,8 +134,7 @@ public class ComposePostActivity extends AppCompatActivity {
         }
 
         // Return the file target for the photo based on filename
-        File file = new File(mediaStorageDir.getPath() + File.separator + fileName);
-        return file;
+        return new File(mediaStorageDir.getPath() + File.separator + fileName);
     }
 
     // create a new post and saves to app
@@ -139,6 +143,20 @@ public class ComposePostActivity extends AppCompatActivity {
         post.setDescription(description);
         post.setImage(new ParseFile(this.photoFile));
         post.setUser(currentUser);
+
+        post.pinAllInBackground(allPosts, new SaveCallback() {
+            @Override
+            public void done(ParseException e) {
+                if (e != null) {
+                    Log.e(TAG, "Error adding reminder", e);
+                    return;
+                }
+                Log.i(TAG, "Post was successful");
+                etDescription.setText("");
+                ivImage.setImageResource(0);
+                finish();
+            }
+        });
         post.saveInBackground(new SaveCallback() {
             @Override
             public void done(ParseException e) {
@@ -153,4 +171,27 @@ public class ComposePostActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        // switch case changes how the method is used based on how it is triggered
+        switch (requestCode) {
+            //  adds taken image to image preview
+            case (CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE):
+                if (resultCode == RESULT_OK) {
+                    // by this point we have the camera photo on disk
+                    Bitmap takenImage = BitmapFactory.decodeFile(photoFile.getAbsolutePath());
+                    // RESIZE BITMAP, see section below
+                    // compresses image for successful Parse upload
+                    // Load the taken image into a preview
+                    ivImage.setImageBitmap(takenImage);
+                } else { // Result was a failure
+                    Toast.makeText(this, "Picture wasn't taken!", Toast.LENGTH_SHORT).show();
+                }
+            default:
+                Log.i(TAG, "default case");
+                break;
+        }
+
+}
 }

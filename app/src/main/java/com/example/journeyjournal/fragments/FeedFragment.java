@@ -1,6 +1,9 @@
 package com.example.journeyjournal.fragments;
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -15,11 +18,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.Toast;
 
 import com.example.journeyjournal.Activities.ComposePostActivity;
+import com.example.journeyjournal.Activities.RemindersActivity;
 import com.example.journeyjournal.ParseConnectorFiles.Post;
 import com.example.journeyjournal.Adapters.PostsAdapter;
 import com.example.journeyjournal.Activities.LoginActivity;
+import com.example.journeyjournal.ParseConnectorFiles.Reminder;
 import com.example.journeyjournal.R;
 import com.parse.FindCallback;
 import com.parse.ParseException;
@@ -32,13 +38,27 @@ import java.util.List;
 public class FeedFragment extends Fragment {
     private static final String TAG = "FeedFragment";
     private SwipeRefreshLayout swipeContainer;
-    private ImageButton ibLogout;
-    private ImageButton ibNewPost;
+    ImageButton ibLogout;
+    ImageButton ibNewPost;
     RecyclerView rvPosts;
     protected PostsAdapter adapter;
     protected List<Post> allPosts;
 
     public FeedFragment() {
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        ConnectivityManager connManager = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        if(wifi.isConnected()){
+            // query posts from the database
+            Log.i(TAG, "onResume");
+            adapter.clear();
+            queryPosts();
+        } else {
+            querySavedPosts();}
     }
 
     @Override
@@ -50,10 +70,12 @@ public class FeedFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        ConnectivityManager connManager = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
 
         ibLogout = view.findViewById(R.id.ibLogout);
-        ibNewPost = view.findViewById(R.id.ibNewPost);
-        rvPosts = view.findViewById(R.id.rvPosts);
+        ibNewPost = view.findViewById(R.id.ibAddJournal);
+        rvPosts = view.findViewById(R.id.rvReminders);
         // initialize the array that will hold posts and create a PostsAdapter
         allPosts = new ArrayList<>();
         adapter = new PostsAdapter(getContext(), allPosts);
@@ -61,8 +83,13 @@ public class FeedFragment extends Fragment {
         rvPosts.setAdapter(adapter);
         // set the layout manager on the recycler view
         rvPosts.setLayoutManager(new LinearLayoutManager(getContext()));
-        queryPosts();
-
+        if(wifi.isConnected()){
+            // query posts from the database
+            Log.i(TAG, "onResume");
+            adapter.clear();
+            queryPosts();
+        } else {
+            querySavedPosts();}
 
         swipeContainer = (SwipeRefreshLayout) view.findViewById(R.id.swipeContainer);
         // Setup refresh listener which triggers new data loading
@@ -72,8 +99,13 @@ public class FeedFragment extends Fragment {
                 // Your code to refresh the list here.
                 // Make sure you call swipeContainer.setRefreshing(false)
                 // once the network request has completed successfully.
-
-                queryPosts();
+                if(wifi.isConnected()){
+                    // query posts from the database
+                    Log.i(TAG, "onResume");
+                    adapter.clear();
+                    queryPosts();
+                } else {
+                    querySavedPosts();}
             }
         });
         // Configure the refreshing colors
@@ -102,8 +134,14 @@ public class FeedFragment extends Fragment {
     }
 
     private void goNewPost() {
-        Intent intent = new Intent(getActivity(), ComposePostActivity.class);
-        startActivity(intent);
+        ConnectivityManager connManager = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        if(wifi.isConnected()){
+            Intent intent = new Intent(getActivity(), ComposePostActivity.class);
+            startActivity(intent);
+        } else {
+            Toast.makeText(getContext(), "Please connect to the internet", Toast.LENGTH_LONG).show();
+        }
     }
 
 
@@ -113,7 +151,7 @@ public class FeedFragment extends Fragment {
         // include data referred by user key
         query.include(Post.KEY_USER);
         query.setLimit(20);
-        query.whereEqualTo("user", ParseUser.getCurrentUser());
+        query.setSkip(0);
         // order posts by creation date (newest first)
         query.addDescendingOrder("createdAt");
         // start an asynchronous call for posts
@@ -124,16 +162,41 @@ public class FeedFragment extends Fragment {
                     Log.e(TAG, "Issue with getting posts", e);
                     return;
                 }
-//                for (Post post : posts) {
-//                    Log.i(TAG, "Post: " + post.getDescription() + ", username: " + post.getUser().getUsername());
-//                }
+                for (Post post : posts) {
+                    Log.i(TAG, "Post: " + post.getDescription() + ", username: " + post.getUser().getUsername());
+                }
                 // save received posts to list and notify adapter of new data
                 allPosts.clear();
-                adapter.notifyDataSetChanged();
                 allPosts.addAll(posts);
                 adapter.notifyDataSetChanged();
                 swipeContainer.setRefreshing(false);
             }
         });
+    }
+
+    private void querySavedPosts(){
+        ParseQuery<Post> query = ParseQuery.getQuery(Post.class);
+        query.include(Post.KEY_USER);
+        query.whereEqualTo(Post.KEY_USER, ParseUser.getCurrentUser());
+        query.fromLocalDatastore();
+        query.addDescendingOrder("createdAt");
+        query.findInBackground(new FindCallback<Post>() {
+            @Override
+            public void done(List<Post> posts, ParseException e) {
+                // check for failure
+                if (e != null) {
+                    Log.e(TAG, "Failure to load saved reminders", e);
+                    return;
+                }
+                // prints every reminder description for debugging purposes
+                for (Post post : posts){
+                    Log.i(TAG, "Post: " + post.getDescription() + ", username: " + post.getUser().getUsername());
+                }
+                // save received comments to list and notify adapter of change
+                allPosts.clear();
+                allPosts.addAll(posts);
+                adapter.notifyDataSetChanged();
+                swipeContainer.setRefreshing(false);
+            }});
     }
 }
