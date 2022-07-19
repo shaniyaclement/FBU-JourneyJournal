@@ -63,7 +63,8 @@ public class EditProfile extends AppCompatActivity {
             Glide.with(this).load(profileImage.getUrl())
                     .circleCrop()
                     .into(ivProfileImageEdit);}
-
+        etEditUsername.setText(user.getUsername());
+        etEditBio.setText(user.getBio());
         tvCancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -84,12 +85,24 @@ public class EditProfile extends AppCompatActivity {
         tvComplete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                user.setUsername(etEditUsername.getText().toString());
-                user.saveInBackground();
-                user.setBio(etEditBio.getText().toString());
-                user.saveInBackground();
-                etEditUsername.setText("");
-                etEditBio.setText("");
+                String username = etEditUsername.getText().toString();
+                if(username.isEmpty()) {Log.i(TAG, "NO NAME CHANGE");
+                } else {
+                    user.setUsername(etEditUsername.getText().toString());
+                }
+                String bio = etEditBio.getText().toString();
+                if(bio.isEmpty()) {
+                    Log.i(TAG, "NO BIO CHANGE");
+                } else {
+                    user.setBio(etEditBio.getText().toString());
+                }
+//                user.saveInBackground();
+                etEditUsername.setText(user.getUsername());
+                etEditBio.setText(user.getBio());
+                //saves to local database
+                user.pinInBackground("UserInfo");
+                //saves change to parse when there is internet
+                user.saveEventually();
                 finish();
             }
         });

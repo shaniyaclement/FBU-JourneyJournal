@@ -15,10 +15,13 @@ import com.parse.ParseFile;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.ImageDecoder;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -57,6 +60,9 @@ public class ComposePostActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_compose_post);
+        ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+
 
         etDescription = findViewById(R.id.etDescription);
         btnImage = findViewById(R.id.btnImage);
@@ -80,7 +86,11 @@ public class ComposePostActivity extends AppCompatActivity {
                     return;
                 }
                 User currentUser = (User) ParseUser.getCurrentUser();
-                savePost(description, currentUser, photoFile);
+                if(wifi.isConnected()){
+                    savePost(description, currentUser, photoFile);
+                } else {
+                    Toast.makeText(ComposePostActivity.this, "Can not add post without internet", Toast.LENGTH_LONG).show();
+                }
             }
         });
         btnImage.setOnClickListener(new View.OnClickListener() {
@@ -89,13 +99,6 @@ public class ComposePostActivity extends AppCompatActivity {
                 launchCamera();
             }
         });
-//        btnUpload.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//               onUploadPhoto();
-//            }
-//        });
-
     }
 
 
@@ -143,32 +146,13 @@ public class ComposePostActivity extends AppCompatActivity {
         post.setDescription(description);
         post.setImage(new ParseFile(this.photoFile));
         post.setUser(currentUser);
-
-        post.pinAllInBackground(allPosts, new SaveCallback() {
-            @Override
-            public void done(ParseException e) {
-                if (e != null) {
-                    Log.e(TAG, "Error adding reminder", e);
-                    return;
-                }
-                Log.i(TAG, "Post was successful");
-                etDescription.setText("");
-                ivImage.setImageResource(0);
-                finish();
-            }
-        });
-        post.saveInBackground(new SaveCallback() {
-            @Override
-            public void done(ParseException e) {
-                if(e != null){
-                    Log.e(TAG, "Error while saving", e);
-                    Toast.makeText(ComposePostActivity.this, "Error while saving", Toast.LENGTH_SHORT).show();
-                }
-                Log.i(TAG, "Post was successful");
-                etDescription.setText("");
-                ivImage.setImageResource(0);
-            }
-        });
+        Log.i(TAG, "Post was successful");
+        etDescription.setText("");
+        ivImage.setImageResource(0);
+        // saves data in data store with label
+        post.pinInBackground("Posts");
+        // saves change to parse when there is internet
+        post.saveEventually();
     }
 
     @Override
