@@ -32,6 +32,7 @@ import com.parse.ParseUser;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("ALL")
 public class ComposeFragment extends Fragment {
 
     private static final String TAG = "ComposeFragment";

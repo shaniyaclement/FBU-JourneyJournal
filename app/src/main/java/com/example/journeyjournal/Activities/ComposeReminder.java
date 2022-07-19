@@ -49,6 +49,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+@SuppressWarnings("ALL")
 public class ComposeReminder extends AppCompatActivity {
 
     private static final String TAG = "ComposeReminder";
