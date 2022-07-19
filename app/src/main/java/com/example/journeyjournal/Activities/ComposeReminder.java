@@ -16,8 +16,10 @@ import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.journeyjournal.Adapters.ReminderAdapter;
+import com.example.journeyjournal.ParseConnectorFiles.Post;
 import com.example.journeyjournal.ParseConnectorFiles.Reminder;
 import com.example.journeyjournal.ParseConnectorFiles.User;
 import com.example.journeyjournal.R;
@@ -31,6 +33,7 @@ import com.google.android.libraries.places.widget.AutocompleteActivity;
 import com.google.android.libraries.places.widget.model.AutocompleteActivityMode;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.datepicker.MaterialPickerOnPositiveButtonClickListener;
+import com.parse.DeleteCallback;
 import com.parse.FindCallback;
 import com.parse.GetCallback;
 import com.parse.ParseException;
@@ -100,13 +103,16 @@ public class ComposeReminder extends AppCompatActivity {
         tvLocation.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Set the fields to specify which types of place data to
-                // return after the user has made a selection.
-                List<Place.Field> fields = Arrays.asList(Place.Field.LAT_LNG, Place.Field.ID, Place.Field.NAME);
-                // Start the autocomplete intent.
-                Intent intent = new Autocomplete.IntentBuilder(AutocompleteActivityMode.FULLSCREEN, fields)
-                    .build(ComposeReminder.this);
-                startActivityForResult(intent, AUTOCOMPLETE_REQUEST_CODE);
+                if(wifi.isConnected()){
+                    // Set the fields to specify which types of place data to
+                    // return after the user has made a selection.
+                    List<Place.Field> fields = Arrays.asList(Place.Field.LAT_LNG, Place.Field.ID, Place.Field.NAME);
+                    // Start the autocomplete intent.
+                    Intent intent = new Autocomplete.IntentBuilder(AutocompleteActivityMode.FULLSCREEN, fields)
+                            .build(ComposeReminder.this);
+                    startActivityForResult(intent, AUTOCOMPLETE_REQUEST_CODE);
+                } else {
+                    Toast.makeText(ComposeReminder.this, "Please connect to internet to add Location", Toast.LENGTH_LONG).show();}
             }
         });
 
@@ -152,16 +158,21 @@ public class ComposeReminder extends AppCompatActivity {
         // set the layout manager on RV
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         rvReminders.setLayoutManager(linearLayoutManager);
-        //query comments from Parse
-        queryReminders();
+        //query reminders from Parse
+        whichQuery();
 
         tvDone.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String remind = etRemind.getText().toString();
+                if(remind.isEmpty()){
+                    Toast.makeText(ComposeReminder.this, "Please add Reminder Title", Toast.LENGTH_SHORT).show();
+                }
                 String notes = etNotes.getText().toString();
+                if(notes.isEmpty()){
+                    Toast.makeText(ComposeReminder.this, "Please add Reminder Note", Toast.LENGTH_SHORT).show();
+                }
                 location = new ParseGeoPoint(latitude, longitude);
-
                 addReminder(remind, notes, user, date, location);
             }
         });
@@ -173,38 +184,21 @@ public class ComposeReminder extends AppCompatActivity {
         reminder.setReminder(remind);
         reminder.setNotes(notes);
         reminder.setUser(user);
-        reminder.setLocationName(locationName);
         if(date!= null){reminder.setRemindDate(date);}
-        if(location != null) {reminder.setLocation(location);}
-        reminder.pinAllInBackground(allReminders, new SaveCallback() {
-            @Override
-            public void done(ParseException e) {
-                if (e != null) {
-                    Log.e(TAG, "Error adding reminder", e);
-                    return;
-                }
-                etRemind.setText("");
-                etNotes.setText("");
-                tvDateEntry.setText("");
-                queryReminders();
-                finish();
-            }
-        });
-
-        reminder.saveInBackground(new SaveCallback() {
-            @Override
-            public void done(ParseException e) {
-                if (e != null) {
-                    Log.e(TAG, "Error adding reminder", e);
-                    return;
-                }
-                etRemind.setText("");
-                etNotes.setText("");
-                tvDateEntry.setText("");
-                queryReminders();
-                finish();
-            }
-        });
+        if(location != null) {
+            reminder.setLocation(location);
+        }
+        if(locationName != null){
+            reminder.setLocationName(locationName);
+        }
+        // add reminder to local data store
+        reminder.pinInBackground("Reminders");
+        // save reminder to Parse when network connection restored
+        reminder.saveEventually();
+        etRemind.setText("");
+        etNotes.setText("");
+        tvDateEntry.setText("");
+        querySavedReminders();
 
         Intent intent = new Intent(ComposeReminder.this, RemindersActivity.class);
         startActivity(intent);
@@ -217,15 +211,24 @@ public class ComposeReminder extends AppCompatActivity {
         // include data referred by user key
         query.include(Reminder.KEY_USER);
         // limit query to latest 20 reminders
-        query.setLimit(20);
+        query.setLimit(5);
+        query.setSkip(0);
         query.whereEqualTo(Reminder.KEY_USER, user);
-
         // order reminders by create (newest first)
         query.addDescendingOrder("createdAt");
         // start asynchronous call for reminders
         query.findInBackground(new FindCallback<Reminder>() {
             @Override
             public void done(List<Reminder> reminders, ParseException e) {
+
+                // Remove the previously cached results.
+                Reminder.unpinAllInBackground("Reminders", new DeleteCallback() {
+                    public void done(ParseException e) {
+                        // Cache the new results.
+                        Post.pinAllInBackground("Reminders", reminders);
+                    }
+                });
+
                 // check for failure
                 if (e != null) {
                     Log.e(TAG, "Failure to load reminders", e);
@@ -244,6 +247,38 @@ public class ComposeReminder extends AppCompatActivity {
         });
     }
 
+    protected void querySavedReminders() {
+        ParseQuery<Reminder> query = ParseQuery.getQuery(Reminder.class);
+        query.include(Reminder.KEY_USER);
+        // limit query to latest 5 reminders
+        query.setLimit(5);
+        query.setSkip(0);
+        query.whereEqualTo(Reminder.KEY_USER, user);
+        // order reminders by create (newest first)
+        query.addDescendingOrder("createdAt");
+        query.fromLocalDatastore().ignoreACLs();
+        query.findInBackground(new FindCallback<Reminder>() {
+            @Override
+            public void done(List<Reminder> reminders, ParseException e) {
+                Log.i(TAG, reminders.toString());
+
+                if (e != null) {
+                    Log.e(TAG, "Issue getting reminders.", e);
+                    return;
+                }
+
+                // at this point, we have gotten the reminders successfully
+                for (Reminder reminder : reminders) {
+                    Log.i(TAG, "Reminder: " + reminder.getReminder() + ", username: " + reminder.getUser().getUsername());
+                }
+
+                allReminders.clear();
+                allReminders.addAll(reminders);
+                adapter.notifyDataSetChanged();
+            }
+        });
+    }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
@@ -254,14 +289,13 @@ public class ComposeReminder extends AppCompatActivity {
                     place = Autocomplete.getPlaceFromIntent(data);
                 }
                 Log.i(TAG, "Place: " + place.getName() + ", " + place.getId() + ", " + place.getLatLng());
-                
-                locationName = place.getName();
 
                 final LatLng latLng = place.getLatLng();
                 if (latLng != null) {
                     longitude = latLng.longitude;
                     latitude = latLng.latitude;
                     tvLocation.setText(place.getName());
+                    locationName = place.getName();
                 } else{
                     Log.i(TAG, "latLng is null");
                 }
@@ -279,6 +313,15 @@ public class ComposeReminder extends AppCompatActivity {
             return;
         }
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private void whichQuery() {
+        ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        if(wifi.isConnected()){
+            queryReminders();
+        } else {
+            querySavedReminders();}
     }
 
 
