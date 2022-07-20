@@ -2,7 +2,10 @@ package com.example.journeyjournal.Activities;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -16,6 +19,7 @@ import com.parse.LogInCallback;
 import com.parse.ParseException;
 import com.parse.ParseUser;
 
+@SuppressWarnings("deprecation")
 public class LoginActivity extends AppCompatActivity {
 
     private static final String TAG = "LoginActivity";
@@ -28,6 +32,8 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+        ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
 
         //checks to see if there is already a user logged in
         // if user is logged in, skip log in & go to MainActivity
@@ -46,7 +52,11 @@ public class LoginActivity extends AppCompatActivity {
                 String username = etUsername.getText().toString();
                 String password = etPassword.getText().toString();
                 //check credentials
-                loginUser(username, password);
+                if(wifi.isConnected()){
+                    loginUser(username, password);
+                } else {
+                    Toast.makeText(LoginActivity.this, "Can not login without internet", Toast.LENGTH_LONG).show();
+                }
             }});
 
         tvSignup.setOnClickListener(new View.OnClickListener() {

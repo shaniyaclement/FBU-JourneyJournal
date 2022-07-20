@@ -1,5 +1,6 @@
 package com.example.journeyjournal.fragments;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
@@ -18,14 +19,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
-import android.widget.Toast;
 
 import com.example.journeyjournal.Activities.ComposePostActivity;
-import com.example.journeyjournal.Activities.RemindersActivity;
 import com.example.journeyjournal.ParseConnectorFiles.Post;
 import com.example.journeyjournal.Adapters.PostsAdapter;
 import com.example.journeyjournal.Activities.LoginActivity;
-import com.example.journeyjournal.ParseConnectorFiles.Reminder;
 import com.example.journeyjournal.R;
 import com.parse.DeleteCallback;
 import com.parse.FindCallback;
@@ -36,6 +34,7 @@ import com.parse.ParseUser;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("deprecation")
 public class FeedFragment extends Fragment {
     private static final String TAG = "FeedFragment";
     private SwipeRefreshLayout swipeContainer;
@@ -83,17 +82,14 @@ public class FeedFragment extends Fragment {
 
         swipeContainer = (SwipeRefreshLayout) view.findViewById(R.id.swipeContainer);
         // Setup refresh listener which triggers new data loading
-        swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                // Your code to refresh the list here.
-                // Make sure you call swipeContainer.setRefreshing(false)
-                // once the network request has completed successfully.
-                if(wifi.isConnected()){
-                    queryPosts();
-                } else {
-                    querySavedPosts();}
-            }
+        swipeContainer.setOnRefreshListener(() -> {
+            // Your code to refresh the list here.
+            // Make sure you call swipeContainer.setRefreshing(false)
+            // once the network request has completed successfully.
+            if(wifi.isConnected()){
+                queryPosts();
+            } else {
+                querySavedPosts();}
         });
         // Configure the refreshing colors
         swipeContainer.setColorSchemeResources(android.R.color.holo_blue_bright,
@@ -105,10 +101,9 @@ public class FeedFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 ParseUser.logOut();
-                ParseUser currentUser = ParseUser.getCurrentUser();
-                Intent i = new Intent(getContext(), LoginActivity.class);
-                startActivity(i);
-                getActivity().finish();
+                Intent intent = new Intent(getContext(), LoginActivity.class);
+                startActivity(intent);
+                requireActivity().finish();
             }
         });
 
@@ -137,6 +132,7 @@ public class FeedFragment extends Fragment {
         query.addDescendingOrder(Post.KEY_CREATED_AT);
         // start an asynchronous call for posts
         query.findInBackground(new FindCallback<Post>() {
+            @SuppressLint("NotifyDataSetChanged")
             @Override
             public void done(List<Post> posts, ParseException e) {
 
@@ -172,6 +168,7 @@ public class FeedFragment extends Fragment {
         query.addDescendingOrder(Post.KEY_CREATED_AT);
         query.fromLocalDatastore();
         query.findInBackground(new FindCallback<Post>() {
+            @SuppressLint("NotifyDataSetChanged")
             @Override
             public void done(List<Post> posts, ParseException e) {
                 Log.i(TAG, posts.toString());

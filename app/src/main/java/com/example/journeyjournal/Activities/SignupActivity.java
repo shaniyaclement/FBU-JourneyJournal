@@ -2,7 +2,10 @@ package com.example.journeyjournal.Activities;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -13,9 +16,9 @@ import android.widget.Toast;
 import com.example.journeyjournal.ParseConnectorFiles.User;
 import com.example.journeyjournal.R;
 import com.parse.ParseException;
-import com.parse.ParseUser;
 import com.parse.SignUpCallback;
 
+@SuppressWarnings("deprecation")
 public class SignupActivity extends AppCompatActivity {
 
     private static final String TAG = "SignUpActivity";
@@ -27,6 +30,8 @@ public class SignupActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signup);
+        ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
 
         etUsername = findViewById(R.id.etUsername);
         etPassword = findViewById(R.id.etPassword);
@@ -37,7 +42,11 @@ public class SignupActivity extends AppCompatActivity {
             public void onClick(View v) {
                 String username = etUsername.getText().toString();
                 String password = etPassword.getText().toString();
-                signupUser(username, password);
+                if(wifi.isConnected()){
+                    signupUser(username, password);
+                } else {
+                    Toast.makeText(SignupActivity.this, "Can not signup without internet", Toast.LENGTH_LONG).show();
+                }
             }
         });
     }
