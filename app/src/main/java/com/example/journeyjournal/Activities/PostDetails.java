@@ -5,13 +5,19 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.util.Log;
 
 import com.example.journeyjournal.Adapters.PostsAdapter;
+import com.example.journeyjournal.ParseConnectorFiles.Comment;
 import com.example.journeyjournal.ParseConnectorFiles.Post;
 import com.example.journeyjournal.ParseConnectorFiles.User;
 import com.example.journeyjournal.R;
+import com.parse.DeleteCallback;
 import com.parse.FindCallback;
 import com.parse.ParseException;
 import com.parse.ParseQuery;
@@ -34,7 +40,7 @@ public class PostDetails extends AppCompatActivity {
         // query posts from the database
         Log.i(TAG, "onResume");
         adapter.clear();
-        queryPosts();
+        whichQuery();
     }
 
     @Override
@@ -50,7 +56,7 @@ public class PostDetails extends AppCompatActivity {
         rvProfile.setAdapter(adapter);
         // set the layout manager on the recycler view
         rvProfile.setLayoutManager(new LinearLayoutManager(this));
-        queryPosts();
+        whichQuery();
 
 
         swipeContainer = findViewById(R.id.swipeContainer);
@@ -58,7 +64,7 @@ public class PostDetails extends AppCompatActivity {
         swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                queryPosts();
+                whichQuery();
             }
         });
         // Configure the refreshing colors
@@ -74,18 +80,23 @@ public class PostDetails extends AppCompatActivity {
         ParseQuery<Post> query = ParseQuery.getQuery(Post.class);
         // include data referred by user key
         query.include(Post.KEY_USER);
-        // query for only the current user
-        query.whereEqualTo(Post.KEY_USER, user);
-
         query.setLimit(20);
-        // how many posts to skip before getting to current
         query.setSkip(0);
         // order posts by creation date (newest first)
-        query.addDescendingOrder("createdAt");
+        query.addDescendingOrder(Post.KEY_CREATED_AT);
         // start an asynchronous call for posts
         query.findInBackground(new FindCallback<Post>() {
             @Override
             public void done(List<Post> posts, ParseException e) {
+
+                // Remove the previously cached results.
+                Post.unpinAllInBackground("Posts", new DeleteCallback() {
+                    public void done(ParseException e) {
+                        // Cache the new results.
+                        Post.pinAllInBackground("Posts", posts);
+                    }
+                });
+
                 if (e != null) {
                     Log.e(TAG, "Issue with getting posts", e);
                     return;
@@ -100,5 +111,42 @@ public class PostDetails extends AppCompatActivity {
                 swipeContainer.setRefreshing(false);
             }
         });
+    }
+
+    protected void querySavedPosts() {
+        ParseQuery<Post> query = ParseQuery.getQuery(Post.class);
+        query.include(Post.KEY_USER);
+        query.addDescendingOrder(Post.KEY_CREATED_AT);
+        query.fromLocalDatastore();
+        query.findInBackground(new FindCallback<Post>() {
+            @Override
+            public void done(List<Post> posts, ParseException e) {
+                Log.i(TAG, posts.toString());
+
+                if (e != null) {
+                    Log.e(TAG, "Issue getting posts.", e);
+                    return;
+                }
+
+                // at this point, we have gotten the posts successfully
+                for (Post post : posts) {
+                    Log.i(TAG, "Post: " + post.getDescription() + ", username: " + post.getUser().getUsername());
+                }
+
+                allPosts.clear();
+                allPosts.addAll(posts);
+                adapter.notifyDataSetChanged();
+                swipeContainer.setRefreshing(false);
+            }
+        });
+    }
+
+    private void whichQuery() {
+        ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        if(wifi.isConnected()){
+            queryPosts();
+        } else {
+            querySavedPosts();}
     }
 }
