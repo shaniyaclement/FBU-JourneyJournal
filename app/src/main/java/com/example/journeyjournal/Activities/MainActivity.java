@@ -65,6 +65,7 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case R.id.action_compose:
                     fragmentToShow = composeFragment;
+                    
                     break;
                 case R.id.action_feed:
                     fragmentToShow = feedFragment;
