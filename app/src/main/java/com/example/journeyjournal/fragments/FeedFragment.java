@@ -140,6 +140,8 @@ public class FeedFragment extends Fragment {
             @Override
             public void done(List<Post> posts, ParseException e) {
 
+                Post.unpinAllInBackground(posts);
+
                 // Remove the previously cached results.
                 Post.unpinAllInBackground("Posts", new DeleteCallback() {
                     public void done(ParseException e) {

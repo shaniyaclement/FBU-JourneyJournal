@@ -77,7 +77,8 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.ViewHo
 
             ParseFile profileImage = user.getProfileImage();
             if (profileImage != null) {
-                Glide.with(context).load(profileImage.getUrl()).circleCrop().into(ivProfileImage);}
+                Glide.with(context).load(profileImage.getUrl()).
+                        circleCrop().into(ivProfileImage);}
 
             // clicking on profile pic --> profile page
             ivProfileImage.setOnClickListener(new View.OnClickListener() {
