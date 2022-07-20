@@ -40,25 +40,23 @@ public class ComposeJournal extends AppCompatActivity implements ShakeListener.C
         tvEntry = findViewById(R.id.etEntry);
         etJournalTitle = findViewById(R.id.etJournalTitle);
         btnAddEntry = findViewById(R.id.btnAddEntry);
+
         allJournals = new ArrayList<>();
         adapter = new JournalsAdapter(this, allJournals);
 
-        btnAddEntry.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String title = etJournalTitle.getText().toString();
-                String entry = tvEntry.getText().toString();
-                if(title.isEmpty()){
-                    Toast.makeText(ComposeJournal.this, "Title cannot be empty", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                if(entry.isEmpty()){
-                    Toast.makeText(ComposeJournal.this, "Entry cannot be empty", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                saveJournal(title, entry);
-                finish();
-            }});
+        btnAddEntry.setOnClickListener(v -> {
+            String title = etJournalTitle.getText().toString();
+            String entry = tvEntry.getText().toString();
+            if(title.isEmpty()){
+                Toast.makeText(ComposeJournal.this, "Title cannot be empty", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if(entry.isEmpty()){
+                Toast.makeText(ComposeJournal.this, "Entry cannot be empty", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            saveJournal(title, entry);
+        });
     }
 
     private void saveJournal(String title, String entry) {
@@ -66,30 +64,10 @@ public class ComposeJournal extends AppCompatActivity implements ShakeListener.C
         journal.setTitle(title);
         journal.setEntry(entry);
         journal.setUser(ParseUser.getCurrentUser());
-        journal.pinAllInBackground(allJournals, new SaveCallback() {
-            @Override
-            public void done(ParseException e) {
-                if (e != null) {
-                    Log.e(TAG, "Error adding journal", e);
-                    return;
-                }
-                etJournalTitle.setText("");
-                tvEntry.setText("");
-                Log.i(TAG, "Post was successful");
-                finish();
-            }
-        });
-
-        journal.saveInBackground(new SaveCallback() {
-            @Override
-            public void done(ParseException e) {
-                if(e != null){
-                    Log.e(TAG, "Error while saving", e);
-                    Toast.makeText(ComposeJournal.this, "Error while saving", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-
+        journal.pinInBackground("Journals");
+        etJournalTitle.setText("");
+        tvEntry.setText("");
+        journal.saveEventually();
     }
 
     @Override
