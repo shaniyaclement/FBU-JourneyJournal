@@ -204,8 +204,8 @@ public class FeedFragment extends Fragment {
         query.setLimit(20);
         query.setSkip(0);
 
-        // query posts that are from users within 25 miles of the user location
-        query.whereWithinMiles(Post.KEY_USER, user.getLocation(), 25.0);
+        // query posts that were created within 25 miles of the user location
+        query.whereWithinMiles(Post.KEY_LOCATION, user.getLocation(), 25.0);
         // order posts by creation date (newest first)
         query.addDescendingOrder(Post.KEY_CREATED_AT);
         // start an asynchronous call for posts
@@ -213,16 +213,21 @@ public class FeedFragment extends Fragment {
             @SuppressLint("NotifyDataSetChanged")
             @Override
             public void done(List<Post> posts, ParseException e) {
-
-                Post.unpinAllInBackground(posts);
+                Log.i(TAG, posts.toString());
 
                 // Remove the previously cached results.
                 Post.unpinAllInBackground("Posts", new DeleteCallback() {
                     public void done(ParseException e) {
+                        if (e != null) {
+                            Log.e(TAG, "Issue with unpinning posts", e);
+                            return;
+                        }
                         // Cache the new results.
+                        Log.i(TAG, "posts deleted and added");
                         Post.pinAllInBackground("Posts", posts);
                     }
                 });
+
 
                 if (e != null) {
                     Log.e(TAG, "Issue with getting posts", e);
@@ -283,7 +288,6 @@ public class FeedFragment extends Fragment {
     @Override
     public void onPause() {
         super.onPause();
-
         LocationServices.getFusedLocationProviderClient(requireActivity()).removeLocationUpdates(mLocationCallback);
     }
 
