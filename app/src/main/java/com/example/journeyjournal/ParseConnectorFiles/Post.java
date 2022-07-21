@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.parse.ParseClassName;
 import com.parse.ParseFile;
+import com.parse.ParseGeoPoint;
 import com.parse.ParseObject;
 import com.parse.ParseUser;
 
@@ -42,6 +43,14 @@ public class Post extends ParseObject {
 
     public void setUser(ParseUser user) {
         put(KEY_USER, user);
+    }
+
+    public ParseGeoPoint getLocation() {
+        return getParseGeoPoint(User.KEY_LOCATION);
+    }
+
+    public void setLocation(ParseGeoPoint location) {
+        put(User.KEY_LOCATION, location);
     }
 
     // calculates how long ago the post was made

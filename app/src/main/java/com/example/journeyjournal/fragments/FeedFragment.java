@@ -30,6 +30,7 @@ import com.example.journeyjournal.Activities.ComposePostActivity;
 import com.example.journeyjournal.ParseConnectorFiles.Post;
 import com.example.journeyjournal.Adapters.PostsAdapter;
 import com.example.journeyjournal.Activities.LoginActivity;
+import com.example.journeyjournal.ParseConnectorFiles.User;
 import com.example.journeyjournal.R;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationResult;
@@ -40,6 +41,7 @@ import com.google.android.gms.location.SettingsClient;
 import com.parse.DeleteCallback;
 import com.parse.FindCallback;
 import com.parse.ParseException;
+import com.parse.ParseGeoPoint;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
 
@@ -58,6 +60,16 @@ public class FeedFragment extends Fragment {
 
     double longitude;
     double latitude;
+    private final User user = (User) ParseUser.getCurrentUser();
+    LocationCallback mLocationCallback = new LocationCallback() {
+        @Override
+        public void onLocationResult(@NonNull LocationResult locationResult) {
+            // do work here
+            if(locationResult.getLastLocation() != null){
+                onLocationChanged(locationResult.getLastLocation());
+            }
+        }
+    };
 
     public FeedFragment() {
     }
@@ -65,10 +77,15 @@ public class FeedFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        ConnectivityManager connManager = (ConnectivityManager) requireActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
         // query posts from the database
         Log.i(TAG, "onResume");
         adapter.clear();
-        querySavedPosts();
+        whichQuery();
+        if(wifi.isConnected()){
+            startLocationUpdates();
+        }
     }
 
     @Override
@@ -80,9 +97,6 @@ public class FeedFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        startLocationUpdates();
-        ConnectivityManager connManager = (ConnectivityManager) requireActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
 
         ibLogout = view.findViewById(R.id.ibLogout);
         ibNewPost = view.findViewById(R.id.ibAddJournal);
@@ -94,20 +108,14 @@ public class FeedFragment extends Fragment {
         rvPosts.setAdapter(adapter);
         // set the layout manager on the recycler view
         rvPosts.setLayoutManager(new LinearLayoutManager(getContext()));
-        querySavedPosts();
+        whichQuery();
 
         swipeContainer = (SwipeRefreshLayout) view.findViewById(R.id.swipeContainer);
         // Setup refresh listener which triggers new data loading
-        swipeContainer.setOnRefreshListener(() -> {
-            // Your code to refresh the list here.
-            // Make sure you call swipeContainer.setRefreshing(false)
-            // once the network request has completed successfully.
-            if (wifi.isConnected()) {
-                queryPosts();
-            } else {
-                querySavedPosts();
-            }
-        });
+        // Your code to refresh the list here.
+        // Make sure you call swipeContainer.setRefreshing(false)
+        // once the network request has completed successfully.
+        swipeContainer.setOnRefreshListener(this::whichQuery);
         // Configure the refreshing colors
         swipeContainer.setColorSchemeResources(android.R.color.holo_blue_bright,
                 android.R.color.holo_green_light,
@@ -131,6 +139,7 @@ public class FeedFragment extends Fragment {
             }
         });
     }
+
 
     // Trigger new location updates at interval
     protected void startLocationUpdates() {
@@ -166,14 +175,7 @@ public class FeedFragment extends Fragment {
                     100);
             return;
         }
-        LocationServices.getFusedLocationProviderClient(requireActivity()).requestLocationUpdates(mLocationRequest, new LocationCallback() {
-                    @Override
-                    public void onLocationResult(LocationResult locationResult) {
-                        // do work here
-                        onLocationChanged(locationResult.getLastLocation());
-                    }
-                },
-                Looper.myLooper());
+        LocationServices.getFusedLocationProviderClient(requireActivity()).requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.myLooper());
         Toast.makeText(getActivity(), "Permission ok", Toast.LENGTH_SHORT).show();
 
     }
@@ -182,10 +184,9 @@ public class FeedFragment extends Fragment {
         // New location has now been determined
         latitude = location.getLatitude();
         longitude = location.getLongitude();
-        String msg = "Updated Location: " +
-                latitude + "," +
-                longitude;
-        Toast.makeText(getActivity(), "on location changed", Toast.LENGTH_SHORT).show();
+        ParseGeoPoint location1 = new ParseGeoPoint(latitude, longitude);
+        user.setLocation(location1);
+        String msg = "Updated Location: " + latitude + "," + longitude;
         Toast.makeText(getActivity(), msg, Toast.LENGTH_LONG).show();
     }
 
@@ -202,6 +203,9 @@ public class FeedFragment extends Fragment {
         query.include(Post.KEY_USER);
         query.setLimit(20);
         query.setSkip(0);
+
+        // query posts that are from users within 25 miles of the user location
+        query.whereWithinMiles(Post.KEY_USER, user.getLocation(), 25.0);
         // order posts by creation date (newest first)
         query.addDescendingOrder(Post.KEY_CREATED_AT);
         // start an asynchronous call for posts
@@ -264,5 +268,24 @@ public class FeedFragment extends Fragment {
             }
         });
     }
+
+    private void whichQuery() {
+        ConnectivityManager connManager = (ConnectivityManager) requireActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        if(wifi.isConnected()){
+            queryPosts();
+            startLocationUpdates();
+        } else {
+            querySavedPosts();
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        LocationServices.getFusedLocationProviderClient(requireActivity()).removeLocationUpdates(mLocationCallback);
+    }
+
 }
 
