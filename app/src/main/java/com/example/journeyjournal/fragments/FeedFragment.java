@@ -189,11 +189,8 @@ public class FeedFragment extends Fragment {
     }
 
     public void onLocationChanged(Location location) {
-        double longitude;
-        double latitude;
-        // New location has now been determined
-        latitude = location.getLatitude();
-        longitude = location.getLongitude();
+        double latitude = location.getLatitude();
+        double longitude = location.getLongitude();
         ParseGeoPoint location1 = new ParseGeoPoint(latitude, longitude);
         currentUser.setLocation(location1);
         String msg = "Updated Location: " + latitude + "," + longitude;
