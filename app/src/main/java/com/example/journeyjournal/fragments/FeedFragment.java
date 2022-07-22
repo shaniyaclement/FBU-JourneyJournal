@@ -60,7 +60,7 @@ public class FeedFragment extends Fragment {
 
     double longitude;
     double latitude;
-    private final User user = (User) ParseUser.getCurrentUser();
+    private final User currentUser = (User) ParseUser.getCurrentUser();
     LocationCallback mLocationCallback = new LocationCallback() {
         @Override
         public void onLocationResult(@NonNull LocationResult locationResult) {
@@ -108,9 +108,8 @@ public class FeedFragment extends Fragment {
         rvPosts.setAdapter(adapter);
         // set the layout manager on the recycler view
         rvPosts.setLayoutManager(new LinearLayoutManager(getContext()));
-        whichQuery();
 
-        swipeContainer = (SwipeRefreshLayout) view.findViewById(R.id.swipeContainer);
+        swipeContainer = view.findViewById(R.id.swipeContainer);
         // Setup refresh listener which triggers new data loading
         // Your code to refresh the list here.
         // Make sure you call swipeContainer.setRefreshing(false)
@@ -147,11 +146,11 @@ public class FeedFragment extends Fragment {
         // Create the location request to start receiving updates
         LocationRequest mLocationRequest = LocationRequest.create();
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        /* 10 secs */
-        long UPDATE_INTERVAL = 10 * 1000;
-        mLocationRequest.setInterval(UPDATE_INTERVAL);
-        /* 2 sec */
-        long FASTEST_INTERVAL = 2000;
+        /* 2 Mile */
+        long MIN_DISTANCE = 2 * 1609;
+        mLocationRequest.setInterval(MIN_DISTANCE);
+        /* 60 sec */
+        long FASTEST_INTERVAL = 600000;
         mLocationRequest.setFastestInterval(FASTEST_INTERVAL);
 
         // Create LocationSettingsRequest object using location request
@@ -175,6 +174,17 @@ public class FeedFragment extends Fragment {
                     100);
             return;
         }
+        if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) ==
+                PackageManager.PERMISSION_DENIED && ActivityCompat.checkSelfPermission(requireActivity(),
+                Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_DENIED) {
+            requestPermissions(
+                    new String[] {
+                            Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.ACCESS_COARSE_LOCATION },
+                    100);
+            Log.i(TAG, "permission denied ask");
+            return;
+        }
         LocationServices.getFusedLocationProviderClient(requireActivity()).requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.myLooper());
         Toast.makeText(getActivity(), "Permission ok", Toast.LENGTH_SHORT).show();
 
@@ -185,7 +195,7 @@ public class FeedFragment extends Fragment {
         latitude = location.getLatitude();
         longitude = location.getLongitude();
         ParseGeoPoint location1 = new ParseGeoPoint(latitude, longitude);
-        user.setLocation(location1);
+        currentUser.setLocation(location1);
         String msg = "Updated Location: " + latitude + "," + longitude;
         Toast.makeText(getActivity(), msg, Toast.LENGTH_LONG).show();
     }
@@ -205,7 +215,7 @@ public class FeedFragment extends Fragment {
         query.setSkip(0);
 
         // query posts that were created within 25 miles of the user location
-        query.whereWithinMiles(Post.KEY_LOCATION, user.getLocation(), 25.0);
+        query.whereWithinMiles(Post.KEY_LOCATION, currentUser.getLocation(), 25.0);
         // order posts by creation date (newest first)
         query.addDescendingOrder(Post.KEY_CREATED_AT);
         // start an asynchronous call for posts
@@ -225,9 +235,9 @@ public class FeedFragment extends Fragment {
                         // Cache the new results.
                         Log.i(TAG, "posts deleted and added");
                         Post.pinAllInBackground("Posts", posts);
+                        Log.i(TAG, posts.toString());
                     }
                 });
-
 
                 if (e != null) {
                     Log.e(TAG, "Issue with getting posts", e);

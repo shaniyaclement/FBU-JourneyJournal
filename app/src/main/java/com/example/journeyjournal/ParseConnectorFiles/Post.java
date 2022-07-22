@@ -17,7 +17,8 @@ public class Post extends ParseObject {
     public static final String KEY_DESCRIPTION = "description";
     public static final String KEY_IMAGE = "image";
     public static final String KEY_USER = "user";
-    public static final String KEY_LOCATION = "postMade";
+    public static final String KEY_LOCATION = "location";
+
 
 
     // gets description for the post
@@ -46,13 +47,11 @@ public class Post extends ParseObject {
         put(KEY_USER, user);
     }
 
-    public ParseGeoPoint getLocation() {
-        return getParseGeoPoint(KEY_LOCATION);
-    }
-
     public void setLocation(ParseGeoPoint location) {
         put(KEY_LOCATION, location);
     }
+
+
 
     // calculates how long ago the post was made
     public static String timeAgo(Date createdAt) {

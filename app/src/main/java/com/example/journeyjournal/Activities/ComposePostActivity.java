@@ -108,6 +108,7 @@ public class ComposePostActivity extends AppCompatActivity {
                 }
                 if(wifi.isConnected()){
                     savePost(description, currentUser, photoFile);
+                    finish();
                 } else {
                     Toast.makeText(ComposePostActivity.this, "Can not add post without internet", Toast.LENGTH_LONG).show();
                 }
@@ -262,10 +263,4 @@ public class ComposePostActivity extends AppCompatActivity {
         }
 
 }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        LocationServices.getFusedLocationProviderClient(this).removeLocationUpdates(mLocationCallback);
-    }
 }
