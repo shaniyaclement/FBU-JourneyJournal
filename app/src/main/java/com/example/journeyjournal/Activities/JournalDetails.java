@@ -29,6 +29,5 @@ public class JournalDetails extends AppCompatActivity {
 
         tvTitle.setText(journals.getTitle());
         tvEntry.setText(journals.getEntry());
-
     }
 }

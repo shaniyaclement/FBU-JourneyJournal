@@ -51,13 +51,14 @@ public class ComposeFragment extends Fragment {
         super.onResume();
         ConnectivityManager connManager = (ConnectivityManager) requireActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-        if(wifi.isConnected()){
+        if (wifi.isConnected()) {
             // query posts from the database
             Log.i(TAG, "onResume");
             adapter.clear();
             queryJournals();
         } else {
-            querySavedJournals();}
+            querySavedJournals();
+        }
     }
 
     @Override
@@ -85,10 +86,11 @@ public class ComposeFragment extends Fragment {
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
         rvJournals.setLayoutManager(linearLayoutManager);
         // query posts from Parse SDK if there is wifi
-        if(wifi.isConnected()){
+        if (wifi.isConnected()) {
             queryJournals();
         } else {
-            querySavedJournals();}
+            querySavedJournals();
+        }
 
         swipeContainer = (SwipeRefreshLayout) view.findViewById(R.id.swipeContainer);
         // Setup refresh listener which triggers new data loading
@@ -100,13 +102,14 @@ public class ComposeFragment extends Fragment {
                 // once the network request has completed successfully.
                 ConnectivityManager connManager = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
                 NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-                if(wifi.isConnected()){
+                if (wifi.isConnected()) {
                     // query posts from the database
                     Log.i(TAG, "onResume");
                     adapter.clear();
                     queryJournals();
                 } else {
-                    querySavedJournals();}
+                    querySavedJournals();
+                }
             }
         });
         // Configure the refreshing colors
@@ -121,10 +124,11 @@ public class ComposeFragment extends Fragment {
                 if (wifi.isConnected()) {
                     Intent intent = new Intent(getContext(), ComposeJournal.class);
                     startActivity(intent);
-                } else{
+                } else {
                     Toast.makeText(getContext(), "Please connect to the internet", Toast.LENGTH_LONG).show();
                 }
-            }});
+            }
+        });
     }
 
 
@@ -159,12 +163,11 @@ public class ComposeFragment extends Fragment {
                 allJournals.addAll(journals);
                 adapter.notifyDataSetChanged();
                 swipeContainer.setRefreshing(false);
-
             }
         });
     }
 
-    private void querySavedJournals(){
+    private void querySavedJournals() {
         ParseQuery<Journals> query = ParseQuery.getQuery(Journals.class);
         query.include(Journals.KEY_USER);
         query.whereEqualTo(Journals.KEY_USER, ParseUser.getCurrentUser());
@@ -179,7 +182,7 @@ public class ComposeFragment extends Fragment {
                     return;
                 }
                 // prints every reminder description for debugging purposes
-                for (Journals journals : journal){
+                for (Journals journals : journal) {
                     Log.i(TAG, "Journal: " + journals.getEntry() + ", username: " + journals.getUser().getUsername());
                     Log.i(TAG, "Saved in database");
                 }
@@ -190,5 +193,6 @@ public class ComposeFragment extends Fragment {
                 swipeContainer.setRefreshing(false);
 
             }
-    });}
+        });
+    }
 }

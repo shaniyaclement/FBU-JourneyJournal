@@ -31,7 +31,7 @@ public class LoginActivity extends AppCompatActivity {
 
         //checks to see if there is already a user logged in
         // if user is logged in, skip log in & go to MainActivity
-        if(ParseUser.getCurrentUser() != null) {
+        if (ParseUser.getCurrentUser() != null) {
             goMainActivity();
         }
 
@@ -47,7 +47,8 @@ public class LoginActivity extends AppCompatActivity {
                 String password = etPassword.getText().toString();
                 //check credentials
                 loginUser(username, password);
-            }});
+            }
+        });
 
         tvSignup.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -57,7 +58,6 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
     }
-
 
     private void goSignUp() {
         Intent intent = new Intent(this, SignupActivity.class);
@@ -71,7 +71,7 @@ public class LoginActivity extends AppCompatActivity {
             public void done(ParseUser user, ParseException e) {
                 // if info doesn't match records, send error message
                 if (e != null) {
-                    Log.e(TAG, "Login Issue " + e );
+                    Log.e(TAG, "Login Issue " + e);
                     Toast.makeText(LoginActivity.this, "Error", Toast.LENGTH_SHORT).show();
                     return;
                 }

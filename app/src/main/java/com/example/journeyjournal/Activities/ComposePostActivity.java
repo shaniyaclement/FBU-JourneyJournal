@@ -52,7 +52,6 @@ public class ComposePostActivity extends AppCompatActivity {
 
     private static final String TAG = "ComposePost";
     private static final int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 42;
-    private static final int PICK_PHOTO_CODE = 1046;
     EditText etDescription;
     Button btnImage;
     Button btnUpload;
@@ -60,12 +59,9 @@ public class ComposePostActivity extends AppCompatActivity {
     ImageView ivImage;
     protected PostsAdapter adapter;
     protected List<Post> allPosts;
-    double latitude;
-    double longitude;
     LocationCallback mLocationCallback = new LocationCallback() {
         @Override
         public void onLocationResult(@NonNull LocationResult locationResult) {
-            // do work here
             if (locationResult.getLastLocation() != null) {
                 onLocationChanged(locationResult.getLastLocation());
             }
@@ -107,7 +103,7 @@ public class ComposePostActivity extends AppCompatActivity {
                     return;
                 }
                 if (wifi.isConnected()) {
-                    savePost(description, currentUser, photoFile);
+                    savePost(description, currentUser);
                     finish();
                 } else {
                     Toast.makeText(ComposePostActivity.this, "Can not add post without internet", Toast.LENGTH_LONG).show();
@@ -168,6 +164,8 @@ public class ComposePostActivity extends AppCompatActivity {
     }
 
     public void onLocationChanged(Location location) {
+        double latitude;
+        double longitude;
         // New location has now been determined
         latitude = location.getLatitude();
         longitude = location.getLongitude();
@@ -216,7 +214,7 @@ public class ComposePostActivity extends AppCompatActivity {
     }
 
     // create a new post and saves to app
-    private void savePost(String description, User currentUser, File photoFile) {
+    private void savePost(String description, User currentUser) {
         Post post = new Post();
         post.setDescription(description);
         post.setImage(new ParseFile(this.photoFile));

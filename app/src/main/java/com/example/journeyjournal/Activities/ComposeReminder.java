@@ -105,7 +105,7 @@ public class ComposeReminder extends AppCompatActivity {
                 List<Place.Field> fields = Arrays.asList(Place.Field.LAT_LNG, Place.Field.ID, Place.Field.NAME);
                 // Start the autocomplete intent.
                 Intent intent = new Autocomplete.IntentBuilder(AutocompleteActivityMode.FULLSCREEN, fields)
-                    .build(ComposeReminder.this);
+                        .build(ComposeReminder.this);
                 startActivityForResult(intent, AUTOCOMPLETE_REQUEST_CODE);
             }
         });
@@ -139,9 +139,9 @@ public class ComposeReminder extends AppCompatActivity {
                         // format the dates in simple format
                         SimpleDateFormat simpleFormat = new SimpleDateFormat("MMM dd, yyyy");
                         // display it with setText
-                        tvDateEntry.setText("Remind me on: " + simpleFormat.format(date));}
+                        tvDateEntry.setText("Remind me on: " + simpleFormat.format(date));
+                    }
                 });
-
 
 
         allReminders = new ArrayList<>();
@@ -174,8 +174,12 @@ public class ComposeReminder extends AppCompatActivity {
         reminder.setNotes(notes);
         reminder.setUser(user);
         reminder.setLocationName(locationName);
-        if(date!= null){reminder.setRemindDate(date);}
-        if(location != null) {reminder.setLocation(location);}
+        if (date != null) {
+            reminder.setRemindDate(date);
+        }
+        if (location != null) {
+            reminder.setLocation(location);
+        }
         reminder.pinAllInBackground(allReminders, new SaveCallback() {
             @Override
             public void done(ParseException e) {
@@ -232,7 +236,7 @@ public class ComposeReminder extends AppCompatActivity {
                     return;
                 }
                 // prints every reminder description for debugging purposes
-                for (Reminder reminder : reminders){
+                for (Reminder reminder : reminders) {
                     Log.i(TAG, "Reminder: " + reminder.getReminder() + ", username: " + reminder.getUser().getUsername());
                 }
 
@@ -254,7 +258,7 @@ public class ComposeReminder extends AppCompatActivity {
                     place = Autocomplete.getPlaceFromIntent(data);
                 }
                 Log.i(TAG, "Place: " + place.getName() + ", " + place.getId() + ", " + place.getLatLng());
-                
+
                 locationName = place.getName();
 
                 final LatLng latLng = place.getLatLng();
@@ -262,7 +266,7 @@ public class ComposeReminder extends AppCompatActivity {
                     longitude = latLng.longitude;
                     latitude = latLng.latitude;
                     tvLocation.setText(place.getName());
-                } else{
+                } else {
                     Log.i(TAG, "latLng is null");
                 }
 
@@ -280,6 +284,4 @@ public class ComposeReminder extends AppCompatActivity {
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
-
-
 }

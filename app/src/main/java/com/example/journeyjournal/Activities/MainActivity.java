@@ -72,7 +72,8 @@ public class MainActivity extends AppCompatActivity {
                 case R.id.action_profile:
                     fragmentToShow = profileFragment;
                     break;
-                default: break;
+                default:
+                    break;
             }
             if (fragmentToShow != null) {
                 getSupportFragmentManager().beginTransaction().replace(R.id.flContainer, fragmentToShow).commit();

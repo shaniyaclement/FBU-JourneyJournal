@@ -48,17 +48,18 @@ public class ComposeJournal extends AppCompatActivity implements ShakeListener.C
             public void onClick(View v) {
                 String title = etJournalTitle.getText().toString();
                 String entry = tvEntry.getText().toString();
-                if(title.isEmpty()){
+                if (title.isEmpty()) {
                     Toast.makeText(ComposeJournal.this, "Title cannot be empty", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                if(entry.isEmpty()){
+                if (entry.isEmpty()) {
                     Toast.makeText(ComposeJournal.this, "Entry cannot be empty", Toast.LENGTH_SHORT).show();
                     return;
                 }
                 saveJournal(title, entry);
                 finish();
-            }});
+            }
+        });
     }
 
     private void saveJournal(String title, String entry) {
@@ -83,7 +84,7 @@ public class ComposeJournal extends AppCompatActivity implements ShakeListener.C
         journal.saveInBackground(new SaveCallback() {
             @Override
             public void done(ParseException e) {
-                if(e != null){
+                if (e != null) {
                     Log.e(TAG, "Error while saving", e);
                     Toast.makeText(ComposeJournal.this, "Error while saving", Toast.LENGTH_SHORT).show();
                 }

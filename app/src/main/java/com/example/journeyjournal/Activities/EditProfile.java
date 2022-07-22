@@ -62,7 +62,8 @@ public class EditProfile extends AppCompatActivity {
         if (profileImage != null) {
             Glide.with(this).load(profileImage.getUrl())
                     .circleCrop()
-                    .into(ivProfileImageEdit);}
+                    .into(ivProfileImageEdit);
+        }
 
         tvCancel.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -114,8 +115,9 @@ public class EditProfile extends AppCompatActivity {
             startActivityForResult(intent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
         }
         Throwable e = null;
-        if(e != null){
-            Log.e(TAG, "Error launching camera", e);}
+        if (e != null) {
+            Log.e(TAG, "Error launching camera", e);
+        }
     }
 
     // adds image to imageView if photo is taken
@@ -146,7 +148,7 @@ public class EditProfile extends AppCompatActivity {
         File mediaStorageDir = new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), TAG);
 
         // Create the storage directory if it does not exist
-        if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()){
+        if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
             Log.d(TAG, "failed to create directory");
         }
 

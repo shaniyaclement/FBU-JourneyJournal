@@ -27,7 +27,6 @@ import com.parse.SaveCallback;
 import java.util.ArrayList;
 import java.util.List;
 
-//
 public class CommentActivity extends AppCompatActivity {
 
     public static final String TAG = "CommentActivity";
@@ -78,7 +77,8 @@ public class CommentActivity extends AppCompatActivity {
 
                 ParseFile profileImage = user.getProfileImage();
                 if (profileImage != null) {
-                    Glide.with(CommentActivity.this).load(profileImage.getUrl()).circleCrop().into(ivProfileImage);}
+                    Glide.with(CommentActivity.this).load(profileImage.getUrl()).circleCrop().into(ivProfileImage);
+                }
 
                 // add to Parse
                 comment.saveInBackground(new SaveCallback() {

@@ -11,14 +11,10 @@ import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.example.journeyjournal.Adapters.ReminderAdapter;
-import com.example.journeyjournal.ParseConnectorFiles.Post;
 import com.example.journeyjournal.ParseConnectorFiles.Reminder;
 import com.example.journeyjournal.ParseConnectorFiles.User;
 import com.example.journeyjournal.R;
@@ -30,6 +26,7 @@ import com.parse.ParseUser;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("ALL")
 public class RemindersActivity extends AppCompatActivity {
     private static final String TAG = "RemindersActivity";
     RecyclerView rvReminders;
@@ -45,13 +42,14 @@ public class RemindersActivity extends AppCompatActivity {
         super.onResume();
         ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-        if(wifi.isConnected()){
+        if (wifi.isConnected()) {
             // query posts from the database
             Log.i(TAG, "onResume");
             adapter.clear();
             queryReminders();
         } else {
-            querySavedReminders();}
+            querySavedReminders();
+        }
     }
 
     @Override
@@ -68,7 +66,7 @@ public class RemindersActivity extends AppCompatActivity {
             public void onClick(View v) {
                 if (wifi.isConnected()) {
                     goComposeReminder();
-                } else{
+                } else {
                     Toast.makeText(RemindersActivity.this, "Please connect to the internet", Toast.LENGTH_LONG).show();
                 }
             }
@@ -86,19 +84,21 @@ public class RemindersActivity extends AppCompatActivity {
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         rvReminders.setLayoutManager(linearLayoutManager);
         //query comments from Parse
-        if(wifi.isConnected()){
+        if (wifi.isConnected()) {
             // query posts from the database
             Log.i(TAG, "either");
             adapter.clear();
             queryReminders();
         } else {
-            querySavedReminders();}    }
+            querySavedReminders();
+        }
+    }
 
     private void goComposeReminder() {
-            Intent intent = new Intent(this, ComposeReminder.class);
-            startActivity(intent);
-            overridePendingTransition(R.anim.right_in, R.anim.left_out);
-        }
+        Intent intent = new Intent(this, ComposeReminder.class);
+        startActivity(intent);
+        overridePendingTransition(R.anim.right_in, R.anim.left_out);
+    }
 
     private void queryReminders() {
         // specify type of data to query - Reminder.class
@@ -121,7 +121,7 @@ public class RemindersActivity extends AppCompatActivity {
                     return;
                 }
                 // prints every reminder description for debugging purposes
-                for (Reminder reminder : reminders){
+                for (Reminder reminder : reminders) {
                     Log.i(TAG, "Reminder: " + reminder.getReminder() + ", username: " + reminder.getUser().getUsername());
                 }
 
@@ -133,7 +133,7 @@ public class RemindersActivity extends AppCompatActivity {
         });
     }
 
-    private void querySavedReminders(){
+    private void querySavedReminders() {
         ParseQuery<Reminder> query = ParseQuery.getQuery(Reminder.class);
         query.include(Reminder.KEY_USER);
         query.whereEqualTo(Reminder.KEY_USER, user);
@@ -148,13 +148,14 @@ public class RemindersActivity extends AppCompatActivity {
                     return;
                 }
                 // prints every reminder description for debugging purposes
-                for (Reminder reminder : reminders){
+                for (Reminder reminder : reminders) {
                     Log.i(TAG, "Reminder: " + reminder.getReminder() + ", username: " + reminder.getUser().getUsername());
                 }
                 // save received reminders to list and notify adapter of change
                 allReminders.clear();
                 allReminders.addAll(reminders);
                 adapter.notifyDataSetChanged();
-            }});
+            }
+        });
     }
 }

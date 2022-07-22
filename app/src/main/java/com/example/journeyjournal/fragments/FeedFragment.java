@@ -64,12 +64,14 @@ public class FeedFragment extends Fragment {
     LocationCallback mLocationCallback = new LocationCallback() {
         @Override
         public void onLocationResult(@NonNull LocationResult locationResult) {
-            // do work here
             if (locationResult.getLastLocation() != null) {
                 onLocationChanged(locationResult.getLastLocation());
             }
         }
     };
+
+    long MIN_DISTANCE = 2 * 1609;
+    long FASTEST_INTERVAL = 600000;
 
     public FeedFragment() {
     }
@@ -79,7 +81,6 @@ public class FeedFragment extends Fragment {
         super.onResume();
         ConnectivityManager connManager = (ConnectivityManager) requireActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-        // query posts from the database
         Log.i(TAG, "onResume");
         adapter.clear();
         whichQuery();
@@ -147,10 +148,8 @@ public class FeedFragment extends Fragment {
         LocationRequest mLocationRequest = LocationRequest.create();
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         /* 2 Mile */
-        long MIN_DISTANCE = 2 * 1609;
         mLocationRequest.setInterval(MIN_DISTANCE);
         /* 60 sec */
-        long FASTEST_INTERVAL = 600000;
         mLocationRequest.setFastestInterval(FASTEST_INTERVAL);
 
         // Create LocationSettingsRequest object using location request
