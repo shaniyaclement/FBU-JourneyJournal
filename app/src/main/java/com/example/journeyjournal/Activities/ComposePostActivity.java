@@ -50,7 +50,7 @@ import java.util.List;
 @SuppressWarnings("deprecation")
 public class ComposePostActivity extends AppCompatActivity {
 
-    private static final String TAG = "ComposePost" ;
+    private static final String TAG = "ComposePost";
     private static final int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 42;
     private static final int PICK_PHOTO_CODE = 1046;
     EditText etDescription;
@@ -66,7 +66,7 @@ public class ComposePostActivity extends AppCompatActivity {
         @Override
         public void onLocationResult(@NonNull LocationResult locationResult) {
             // do work here
-            if(locationResult.getLastLocation() != null){
+            if (locationResult.getLastLocation() != null) {
                 onLocationChanged(locationResult.getLastLocation());
             }
         }
@@ -98,15 +98,15 @@ public class ComposePostActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 String description = etDescription.getText().toString();
-                if(description.isEmpty()){
+                if (description.isEmpty()) {
                     Toast.makeText(ComposePostActivity.this, "Description cannot be empty", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                if(photoFile == null || ivImage.getDrawable() == null) {
+                if (photoFile == null || ivImage.getDrawable() == null) {
                     Toast.makeText(ComposePostActivity.this, "No image", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                if(wifi.isConnected()){
+                if (wifi.isConnected()) {
                     savePost(description, currentUser, photoFile);
                     finish();
                 } else {
@@ -156,9 +156,9 @@ public class ComposePostActivity extends AppCompatActivity {
                 PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(
-                    new String[] {
+                    new String[]{
                             Manifest.permission.ACCESS_FINE_LOCATION,
-                            Manifest.permission.ACCESS_COARSE_LOCATION },
+                            Manifest.permission.ACCESS_COARSE_LOCATION},
                     100);
             return;
         }
@@ -200,7 +200,6 @@ public class ComposePostActivity extends AppCompatActivity {
     }
 
 
-
     // Returns the File for a photo stored on disk given the fileName
     private File getPhotoFileUri(String fileName) {
         // Get safe storage directory for photos using `getExternalFilesDir` on Context to access package-specific directories
@@ -208,7 +207,7 @@ public class ComposePostActivity extends AppCompatActivity {
         File mediaStorageDir = new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), TAG);
 
         // Create the storage directory if it does not exist
-        if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()){
+        if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
             Log.d(TAG, "failed to create directory");
         }
 
@@ -229,7 +228,7 @@ public class ComposePostActivity extends AppCompatActivity {
         post.saveInBackground(new SaveCallback() {
             @Override
             public void done(ParseException e) {
-                if(e != null){
+                if (e != null) {
                     Log.e(TAG, "Error while saving", e);
                     Toast.makeText(ComposePostActivity.this, "Error while saving", Toast.LENGTH_SHORT).show();
                 }
@@ -262,5 +261,5 @@ public class ComposePostActivity extends AppCompatActivity {
                 break;
         }
 
-}
+    }
 }

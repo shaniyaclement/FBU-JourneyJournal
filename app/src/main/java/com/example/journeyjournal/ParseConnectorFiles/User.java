@@ -14,7 +14,6 @@ public class User extends ParseUser {
     public static final String KEY_BIO = "bio";
     public static final String KEY_LOCATION = "location";
 
-
     public ParseFile getProfileImage() {
         return getParseFile(KEY_PROFILE_PIC);
     }
@@ -46,6 +45,5 @@ public class User extends ParseUser {
     public void setLocation(ParseGeoPoint location) {
         put(KEY_LOCATION, location);
     }
-
 
 }

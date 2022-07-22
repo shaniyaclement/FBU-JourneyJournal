@@ -65,7 +65,7 @@ public class FeedFragment extends Fragment {
         @Override
         public void onLocationResult(@NonNull LocationResult locationResult) {
             // do work here
-            if(locationResult.getLastLocation() != null){
+            if (locationResult.getLastLocation() != null) {
                 onLocationChanged(locationResult.getLastLocation());
             }
         }
@@ -83,7 +83,7 @@ public class FeedFragment extends Fragment {
         Log.i(TAG, "onResume");
         adapter.clear();
         whichQuery();
-        if(wifi.isConnected()){
+        if (wifi.isConnected()) {
             startLocationUpdates();
         }
     }
@@ -168,9 +168,9 @@ public class FeedFragment extends Fragment {
                 PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(requireActivity(),
                 Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(
-                    new String[] {
+                    new String[]{
                             Manifest.permission.ACCESS_FINE_LOCATION,
-                            Manifest.permission.ACCESS_COARSE_LOCATION },
+                            Manifest.permission.ACCESS_COARSE_LOCATION},
                     100);
             return;
         }
@@ -178,9 +178,9 @@ public class FeedFragment extends Fragment {
                 PackageManager.PERMISSION_DENIED && ActivityCompat.checkSelfPermission(requireActivity(),
                 Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_DENIED) {
             requestPermissions(
-                    new String[] {
+                    new String[]{
                             Manifest.permission.ACCESS_FINE_LOCATION,
-                            Manifest.permission.ACCESS_COARSE_LOCATION },
+                            Manifest.permission.ACCESS_COARSE_LOCATION},
                     100);
             Log.i(TAG, "permission denied ask");
             return;
@@ -213,6 +213,8 @@ public class FeedFragment extends Fragment {
         query.include(Post.KEY_USER);
         query.setLimit(20);
         query.setSkip(0);
+
+        // TODO - add more scoping constraints (followings, user interest)
 
         // query posts that were created within 25 miles of the user location
         query.whereWithinMiles(Post.KEY_LOCATION, currentUser.getLocation(), 25.0);
@@ -287,7 +289,7 @@ public class FeedFragment extends Fragment {
     private void whichQuery() {
         ConnectivityManager connManager = (ConnectivityManager) requireActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-        if(wifi.isConnected()){
+        if (wifi.isConnected()) {
             queryPosts();
             startLocationUpdates();
         } else {

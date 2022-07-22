@@ -20,24 +20,27 @@ public class Post extends ParseObject {
     public static final String KEY_LOCATION = "location";
 
 
-
     // gets description for the post
-    public String getDescription(){
+    public String getDescription() {
         return getString(KEY_DESCRIPTION);
 
     }
+
     // set description for the post
-    public void setDescription(String description){
+    public void setDescription(String description) {
         put(KEY_DESCRIPTION, description);
     }
+
     // gets image for the post
-    public ParseFile getImage(){
+    public ParseFile getImage() {
         return getParseFile(KEY_IMAGE);
     }
+
     //sets image for the post
-    public void setImage(ParseFile parseFile){
+    public void setImage(ParseFile parseFile) {
         put(KEY_IMAGE, parseFile);
     }
+
     // gets the user that created the post
     public ParseUser getUser() {
         return getParseUser(KEY_USER);
@@ -50,7 +53,6 @@ public class Post extends ParseObject {
     public void setLocation(ParseGeoPoint location) {
         put(KEY_LOCATION, location);
     }
-
 
 
     // calculates how long ago the post was made
@@ -88,5 +90,4 @@ public class Post extends ParseObject {
 
         return "";
     }
-
 }

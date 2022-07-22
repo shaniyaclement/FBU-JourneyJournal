@@ -50,19 +50,19 @@ dependencies {
     implementation "androidx.recyclerview:recyclerview:1.2.1"
 
     implementation 'com.github.bumptech.glide:glide:4.12.0'
-    // Glide v4 uses this new annotation processor -- see https://bumptech.github.io/glide/doc/generatedapi.html
+    // glide v4 uses this new annotation processor -- see https://bumptech.github.io/glide/doc/generatedapi.html
     annotationProcessor 'com.github.bumptech.glide:compiler:4.12.0'
     implementation 'org.parceler:parceler-api:1.1.12'
     annotationProcessor 'org.parceler:parceler:1.1.12'
     implementation 'com.codepath.libraries:asynchttpclient:2.2.0'
 
-    //google places
+    // google places
     implementation 'com.google.android.libraries.places:places:2.6.0'
     implementation 'com.google.maps.android:android-maps-utils:2.3.0'
     implementation 'com.google.maps.android:maps-utils-ktx:3.4.0'
-
     implementation 'com.google.android.gms:play-services-location:20.0.0'
 
+    // material design
     implementation "com.google.android.material:material:1.7.0-alpha03"
 
 
