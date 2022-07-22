@@ -50,10 +50,10 @@ public class FeedFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-            // query posts from the database
-            Log.i(TAG, "onResume");
-            adapter.clear();
-            querySavedPosts();
+        // query posts from the database
+        Log.i(TAG, "onResume");
+        adapter.clear();
+        querySavedPosts();
     }
 
     @Override
@@ -86,10 +86,11 @@ public class FeedFragment extends Fragment {
             // Your code to refresh the list here.
             // Make sure you call swipeContainer.setRefreshing(false)
             // once the network request has completed successfully.
-            if(wifi.isConnected()){
+            if (wifi.isConnected()) {
                 queryPosts();
             } else {
-                querySavedPosts();}
+                querySavedPosts();
+            }
         });
         // Configure the refreshing colors
         swipeContainer.setColorSchemeResources(android.R.color.holo_blue_bright,
@@ -116,8 +117,8 @@ public class FeedFragment extends Fragment {
     }
 
     private void goNewPost() {
-            Intent intent = new Intent(getActivity(), ComposePostActivity.class);
-            startActivity(intent);
+        Intent intent = new Intent(getActivity(), ComposePostActivity.class);
+        startActivity(intent);
     }
 
 

@@ -77,13 +77,13 @@ public class RemindersActivity extends AppCompatActivity {
         rvReminders.setLayoutManager(linearLayoutManager);
         //query reminders
         whichQuery();
-        }
+    }
 
     private void goComposeReminder() {
-            Intent intent = new Intent(this, ComposeReminder.class);
-            startActivity(intent);
-            overridePendingTransition(R.anim.right_in, R.anim.left_out);
-        }
+        Intent intent = new Intent(this, ComposeReminder.class);
+        startActivity(intent);
+        overridePendingTransition(R.anim.right_in, R.anim.left_out);
+    }
 
     private void queryReminders() {
         // specify type of data to query - Reminder.class
@@ -115,7 +115,7 @@ public class RemindersActivity extends AppCompatActivity {
                     return;
                 }
                 // prints every reminder description for debugging purposes
-                for (Reminder reminder : reminders){
+                for (Reminder reminder : reminders) {
                     Log.i(TAG, "Reminder: " + reminder.getReminder() + ", username: " + reminder.getUser().getUsername());
                 }
 
@@ -156,12 +156,14 @@ public class RemindersActivity extends AppCompatActivity {
             }
         });
     }
+
     private void whichQuery() {
         ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-        if(wifi.isConnected()){
+        if (wifi.isConnected()) {
             queryReminders();
         } else {
-            querySavedReminders();}
+            querySavedReminders();
+        }
     }
 }

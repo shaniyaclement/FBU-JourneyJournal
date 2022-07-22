@@ -37,7 +37,7 @@ public class LoginActivity extends AppCompatActivity {
 
         //checks to see if there is already a user logged in
         // if user is logged in, skip log in & go to MainActivity
-        if(ParseUser.getCurrentUser() != null) {
+        if (ParseUser.getCurrentUser() != null) {
             goMainActivity();
         }
 
@@ -52,12 +52,13 @@ public class LoginActivity extends AppCompatActivity {
                 String username = etUsername.getText().toString();
                 String password = etPassword.getText().toString();
                 //check credentials
-                if(wifi.isConnected()){
+                if (wifi.isConnected()) {
                     loginUser(username, password);
                 } else {
                     Toast.makeText(LoginActivity.this, "Can not login without internet", Toast.LENGTH_LONG).show();
                 }
-            }});
+            }
+        });
 
         tvSignup.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -81,7 +82,7 @@ public class LoginActivity extends AppCompatActivity {
             public void done(ParseUser user, ParseException e) {
                 // if info doesn't match records, send error message
                 if (e != null) {
-                    Log.e(TAG, "Login Issue " + e );
+                    Log.e(TAG, "Login Issue " + e);
                     Toast.makeText(LoginActivity.this, "Error", Toast.LENGTH_SHORT).show();
                     return;
                 }

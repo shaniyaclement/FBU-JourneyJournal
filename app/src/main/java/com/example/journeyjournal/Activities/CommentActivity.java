@@ -136,7 +136,6 @@ public class CommentActivity extends AppCompatActivity {
                 for (Comment comment : comments) {
                     Log.i(TAG, "Comment: " + comment.getComment() + ", username: " + comment.getCommenter().getUsername());
                 }
-
                 // save received comments to list and notify adapter of change
                 allComments.clear();
                 allComments.addAll(comments);

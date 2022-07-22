@@ -63,7 +63,8 @@ public class ProfileFragment extends HelperFragment {
     TextView tvFollowingNum;
 
 
-    public ProfileFragment() {}
+    public ProfileFragment() {
+    }
 
     @Override
     public void onResume() {
@@ -93,10 +94,10 @@ public class ProfileFragment extends HelperFragment {
         ConnectivityManager connManager = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
 
-        if(getActivity() == null){
+        if (getActivity() == null) {
             Log.i(TAG, "grtActivity() is null");
             return;
-        } else{
+        } else {
             Log.i(TAG, "getActivity() is not null");
 
         }
@@ -131,11 +132,12 @@ public class ProfileFragment extends HelperFragment {
         swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                if(wifi.isConnected()){
+                if (wifi.isConnected()) {
                     queryPosts();
                 } else {
                     querySavedPosts();
-                }            }
+                }
+            }
         });
 
         swipeContainer.setColorSchemeResources(android.R.color.holo_blue_bright,
@@ -150,7 +152,7 @@ public class ProfileFragment extends HelperFragment {
             public void onClick(View v) {
                 ConnectivityManager connManager = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
                 NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-                if(wifi.isConnected()){
+                if (wifi.isConnected()) {
                     launchCamera();
                 } else {
                     Toast.makeText(getContext(), "Please connect to the internet", Toast.LENGTH_LONG).show();
@@ -170,7 +172,8 @@ public class ProfileFragment extends HelperFragment {
         if (profileImage != null) {
             Glide.with(this).load(profileImage.getUrl())
                     .circleCrop()
-                    .into(ivProfileImageProfile);}
+                    .into(ivProfileImageProfile);
+        }
 
         if (user != ParseUser.getCurrentUser()) {
             btnFollow.setVisibility(View.VISIBLE);

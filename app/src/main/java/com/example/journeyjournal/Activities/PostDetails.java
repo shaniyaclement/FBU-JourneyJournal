@@ -135,9 +135,10 @@ public class PostDetails extends AppCompatActivity {
     private void whichQuery() {
         ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-        if(wifi.isConnected()){
+        if (wifi.isConnected()) {
             queryPosts();
         } else {
-            querySavedPosts();}
+            querySavedPosts();
+        }
     }
 }

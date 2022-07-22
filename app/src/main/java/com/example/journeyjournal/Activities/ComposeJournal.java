@@ -47,11 +47,11 @@ public class ComposeJournal extends AppCompatActivity implements ShakeListener.C
         btnAddEntry.setOnClickListener(v -> {
             String title = etJournalTitle.getText().toString();
             String entry = tvEntry.getText().toString();
-            if(title.isEmpty()){
+            if (title.isEmpty()) {
                 Toast.makeText(ComposeJournal.this, "Title cannot be empty", Toast.LENGTH_SHORT).show();
                 return;
             }
-            if(entry.isEmpty()){
+            if (entry.isEmpty()) {
                 Toast.makeText(ComposeJournal.this, "Entry cannot be empty", Toast.LENGTH_SHORT).show();
                 return;
             }

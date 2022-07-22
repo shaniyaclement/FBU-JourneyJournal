@@ -104,7 +104,8 @@ public class ComposeFragment extends Fragment {
             public void onClick(View v) {
                 Intent intent = new Intent(getActivity(), ComposeJournal.class);
                 startActivity(intent);
-            }});
+            }
+        });
     }
 
 
@@ -153,7 +154,7 @@ public class ComposeFragment extends Fragment {
         });
     }
 
-    private void querySavedJournals(){
+    private void querySavedJournals() {
         ParseQuery<Journals> query = ParseQuery.getQuery(Journals.class);
         query.include(Journals.KEY_USER);
         query.whereEqualTo(Journals.KEY_USER, ParseUser.getCurrentUser());
@@ -169,7 +170,7 @@ public class ComposeFragment extends Fragment {
                     return;
                 }
                 // prints every journal description for debugging purposes
-                for (Journals journals : journal){
+                for (Journals journals : journal) {
                     Log.i(TAG, "Journal: " + journals.getEntry() + ", username: " + journals.getUser().getUsername());
                     Log.i(TAG, "Saved in database");
                 }
@@ -179,14 +180,16 @@ public class ComposeFragment extends Fragment {
                 adapter.notifyDataSetChanged();
                 swipeContainer.setRefreshing(false);
             }
-        });}
+        });
+    }
 
     private void whichQuery() {
         ConnectivityManager connManager = (ConnectivityManager) requireActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-        if(wifi.isConnected()){
+        if (wifi.isConnected()) {
             queryJournals();
         } else {
-            querySavedJournals();}
+            querySavedJournals();
+        }
     }
 }

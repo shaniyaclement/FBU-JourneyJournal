@@ -62,7 +62,8 @@ public class EditProfile extends AppCompatActivity {
         if (profileImage != null) {
             Glide.with(this).load(profileImage.getUrl())
                     .circleCrop()
-                    .into(ivProfileImageEdit);}
+                    .into(ivProfileImageEdit);
+        }
         etEditUsername.setText(user.getUsername());
         etEditBio.setText(user.getBio());
         tvCancel.setOnClickListener(new View.OnClickListener() {
@@ -86,12 +87,13 @@ public class EditProfile extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 String username = etEditUsername.getText().toString();
-                if(username.isEmpty()) {Log.i(TAG, "NO NAME CHANGE");
+                if (username.isEmpty()) {
+                    Log.i(TAG, "NO NAME CHANGE");
                 } else {
                     user.setUsername(etEditUsername.getText().toString());
                 }
                 String bio = etEditBio.getText().toString();
-                if(bio.isEmpty()) {
+                if (bio.isEmpty()) {
                     Log.i(TAG, "NO BIO CHANGE");
                 } else {
                     user.setBio(etEditBio.getText().toString());
@@ -127,8 +129,9 @@ public class EditProfile extends AppCompatActivity {
             startActivityForResult(intent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
         }
         Throwable e = null;
-        if(e != null){
-            Log.e(TAG, "Error launching camera", e);}
+        if (e != null) {
+            Log.e(TAG, "Error launching camera", e);
+        }
     }
 
     // adds image to imageView if photo is taken
@@ -159,7 +162,7 @@ public class EditProfile extends AppCompatActivity {
         File mediaStorageDir = new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), TAG);
 
         // Create the storage directory if it does not exist
-        if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()){
+        if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
             Log.d(TAG, "failed to create directory");
         }
 

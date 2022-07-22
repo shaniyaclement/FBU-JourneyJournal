@@ -42,7 +42,7 @@ public class SignupActivity extends AppCompatActivity {
             public void onClick(View v) {
                 String username = etUsername.getText().toString();
                 String password = etPassword.getText().toString();
-                if(wifi.isConnected()){
+                if (wifi.isConnected()) {
                     signupUser(username, password);
                 } else {
                     Toast.makeText(SignupActivity.this, "Can not signup without internet", Toast.LENGTH_LONG).show();
@@ -58,7 +58,7 @@ public class SignupActivity extends AppCompatActivity {
         user.signUpInBackground(new SignUpCallback() {
             @Override
             public void done(ParseException e) {
-                if(e != null){
+                if (e != null) {
                     Log.e(TAG, "Error while saving", e);
                     Toast.makeText(SignupActivity.this, "Error while saving", Toast.LENGTH_SHORT).show();
                 }

@@ -104,7 +104,7 @@ public class ComposeReminder extends AppCompatActivity {
         tvLocation.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(wifi.isConnected()){
+                if (wifi.isConnected()) {
                     // Set the fields to specify which types of place data to
                     // return after the user has made a selection.
                     List<Place.Field> fields = Arrays.asList(Place.Field.LAT_LNG, Place.Field.ID, Place.Field.NAME);
@@ -113,7 +113,8 @@ public class ComposeReminder extends AppCompatActivity {
                             .build(ComposeReminder.this);
                     startActivityForResult(intent, AUTOCOMPLETE_REQUEST_CODE);
                 } else {
-                    Toast.makeText(ComposeReminder.this, "Please connect to internet to add Location", Toast.LENGTH_LONG).show();}
+                    Toast.makeText(ComposeReminder.this, "Please connect to internet to add Location", Toast.LENGTH_LONG).show();
+                }
             }
         });
 
@@ -146,9 +147,9 @@ public class ComposeReminder extends AppCompatActivity {
                         // format the dates in simple format
                         SimpleDateFormat simpleFormat = new SimpleDateFormat("MMM dd, yyyy");
                         // display it with setText
-                        tvDateEntry.setText("Remind me on: " + simpleFormat.format(date));}
+                        tvDateEntry.setText("Remind me on: " + simpleFormat.format(date));
+                    }
                 });
-
 
 
         allReminders = new ArrayList<>();
@@ -166,11 +167,11 @@ public class ComposeReminder extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 String remind = etRemind.getText().toString();
-                if(remind.isEmpty()){
+                if (remind.isEmpty()) {
                     Toast.makeText(ComposeReminder.this, "Please add Reminder Title", Toast.LENGTH_SHORT).show();
                 }
                 String notes = etNotes.getText().toString();
-                if(notes.isEmpty()){
+                if (notes.isEmpty()) {
                     Toast.makeText(ComposeReminder.this, "Please add Reminder Note", Toast.LENGTH_SHORT).show();
                 }
                 location = new ParseGeoPoint(latitude, longitude);
@@ -185,11 +186,13 @@ public class ComposeReminder extends AppCompatActivity {
         reminder.setReminder(remind);
         reminder.setNotes(notes);
         reminder.setUser(user);
-        if(date!= null){reminder.setRemindDate(date);}
-        if(location != null) {
+        if (date != null) {
+            reminder.setRemindDate(date);
+        }
+        if (location != null) {
             reminder.setLocation(location);
         }
-        if(locationName != null){
+        if (locationName != null) {
             reminder.setLocationName(locationName);
         }
         // add reminder to local data store
@@ -236,7 +239,7 @@ public class ComposeReminder extends AppCompatActivity {
                     return;
                 }
                 // prints every reminder description for debugging purposes
-                for (Reminder reminder : reminders){
+                for (Reminder reminder : reminders) {
                     Log.i(TAG, "Reminder: " + reminder.getReminder() + ", username: " + reminder.getUser().getUsername());
                 }
 
@@ -297,7 +300,7 @@ public class ComposeReminder extends AppCompatActivity {
                     latitude = latLng.latitude;
                     tvLocation.setText(place.getName());
                     locationName = place.getName();
-                } else{
+                } else {
                     Log.i(TAG, "latLng is null");
                 }
 
@@ -319,10 +322,11 @@ public class ComposeReminder extends AppCompatActivity {
     private void whichQuery() {
         ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-        if(wifi.isConnected()){
+        if (wifi.isConnected()) {
             queryReminders();
         } else {
-            querySavedReminders();}
+            querySavedReminders();
+        }
     }
 
 
