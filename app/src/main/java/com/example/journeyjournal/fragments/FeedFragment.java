@@ -58,8 +58,6 @@ public class FeedFragment extends Fragment {
     protected PostsAdapter adapter;
     protected List<Post> allPosts;
 
-    double longitude;
-    double latitude;
     private final User currentUser = (User) ParseUser.getCurrentUser();
     LocationCallback mLocationCallback = new LocationCallback() {
         @Override
@@ -70,6 +68,8 @@ public class FeedFragment extends Fragment {
             }
         }
     };
+    long MIN_DISTANCE = 2 * 1609;
+    long FASTEST_INTERVAL = 2000;
 
     public FeedFragment() {
     }
@@ -147,10 +147,8 @@ public class FeedFragment extends Fragment {
         LocationRequest mLocationRequest = LocationRequest.create();
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         /* 2 Mile */
-        long MIN_DISTANCE = 2 * 1609;
         mLocationRequest.setInterval(MIN_DISTANCE);
         /* 60 sec */
-        long FASTEST_INTERVAL = 600000;
         mLocationRequest.setFastestInterval(FASTEST_INTERVAL);
 
         // Create LocationSettingsRequest object using location request
@@ -191,6 +189,8 @@ public class FeedFragment extends Fragment {
     }
 
     public void onLocationChanged(Location location) {
+        double longitude;
+        double latitude;
         // New location has now been determined
         latitude = location.getLatitude();
         longitude = location.getLongitude();

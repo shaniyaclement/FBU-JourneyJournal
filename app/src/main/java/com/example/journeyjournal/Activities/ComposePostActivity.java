@@ -60,8 +60,6 @@ public class ComposePostActivity extends AppCompatActivity {
     ImageView ivImage;
     protected PostsAdapter adapter;
     protected List<Post> allPosts;
-    double latitude;
-    double longitude;
     LocationCallback mLocationCallback = new LocationCallback() {
         @Override
         public void onLocationResult(@NonNull LocationResult locationResult) {
@@ -71,6 +69,8 @@ public class ComposePostActivity extends AppCompatActivity {
             }
         }
     };
+    long MIN_DISTANCE = 2 * 1609;
+    long FASTEST_INTERVAL = 2000;
 
     User currentUser = (User) ParseUser.getCurrentUser();
 
@@ -134,11 +134,9 @@ public class ComposePostActivity extends AppCompatActivity {
         // Create the location request to start receiving updates
         LocationRequest mLocationRequest = LocationRequest.create();
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        /* 10 secs */
-        long UPDATE_INTERVAL = 10 * 1000;
-        mLocationRequest.setInterval(UPDATE_INTERVAL);
+        /* 2 miles */
+        mLocationRequest.setInterval(MIN_DISTANCE);
         /* 2 sec */
-        long FASTEST_INTERVAL = 2000;
         mLocationRequest.setFastestInterval(FASTEST_INTERVAL);
 
         // Create LocationSettingsRequest object using location request
@@ -168,6 +166,8 @@ public class ComposePostActivity extends AppCompatActivity {
     }
 
     public void onLocationChanged(Location location) {
+        double latitude;
+        double longitude;
         // New location has now been determined
         latitude = location.getLatitude();
         longitude = location.getLongitude();
