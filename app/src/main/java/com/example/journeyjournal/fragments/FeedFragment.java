@@ -52,8 +52,6 @@ import java.util.List;
 public class FeedFragment extends Fragment {
     private static final String TAG = "FeedFragment";
     private SwipeRefreshLayout swipeContainer;
-    ImageButton ibLogout;
-    ImageButton ibNewPost;
     RecyclerView rvPosts;
     protected PostsAdapter adapter;
     protected List<Post> allPosts;
@@ -98,8 +96,6 @@ public class FeedFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        ibLogout = view.findViewById(R.id.ibLogout);
-        ibNewPost = view.findViewById(R.id.ibAddJournal);
         rvPosts = view.findViewById(R.id.rvReminders);
         // initialize the array that will hold posts and create a PostsAdapter
         allPosts = new ArrayList<>();
@@ -120,23 +116,6 @@ public class FeedFragment extends Fragment {
                 android.R.color.holo_green_light,
                 android.R.color.holo_orange_light,
                 android.R.color.holo_red_light);
-
-        ibLogout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                ParseUser.logOut();
-                Intent intent = new Intent(getContext(), LoginActivity.class);
-                startActivity(intent);
-                requireActivity().finish();
-            }
-        });
-
-        ibNewPost.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                goNewPost();
-            }
-        });
     }
 
 
