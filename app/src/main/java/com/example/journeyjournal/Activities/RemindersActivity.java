@@ -94,7 +94,7 @@ public class RemindersActivity extends AppCompatActivity {
         } else {
             querySavedReminders();}    }
 
-    private void goComposeReminder() {
+    public void goComposeReminder() {
             Intent intent = new Intent(this, ComposeReminder.class);
             startActivity(intent);
             overridePendingTransition(R.anim.right_in, R.anim.left_out);
