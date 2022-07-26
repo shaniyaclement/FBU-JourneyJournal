@@ -94,4 +94,3 @@ Connects user with lifestyle content from other journalers, reminders for the da
 ### 3. Wireframes 
 
 <img src="https://github.com/shaniyaclement/FBU-JourneyJournal/raw/master/Wireframes.jpg" width="250" />
-

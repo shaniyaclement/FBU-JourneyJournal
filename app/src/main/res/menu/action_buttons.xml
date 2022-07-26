@@ -7,7 +7,20 @@
         android:id="@+id/action_menu"
         android:icon="@drawable/logo1"
         android:title="@string/app_name"
-        app:showAsAction="ifRoom"/>
+        app:showAsAction="ifRoom">
+
+    <menu>
+        <item android:id="@+id/new_post"
+            android:title="New Post" />
+        <item android:id="@+id/new_journal"
+            android:title="New Journal" />
+        <item android:id="@+id/new_reminder"
+            android:title="New Reminder" />
+        <item android:id="@+id/logout"
+            android:title="Logout" />
+    </menu>
+
+    </item>
 
     <!-- Settings, should always be in the overflow -->
 

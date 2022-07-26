@@ -36,7 +36,6 @@ public class ComposeFragment extends Fragment {
 
     private static final String TAG = "ComposeFragment";
     private SwipeRefreshLayout swipeContainer;
-    ImageButton ibAddJournal;
     RecyclerView rvJournals;
     protected JournalsAdapter adapter;
     protected List<Journals> allJournals;
@@ -74,7 +73,6 @@ public class ComposeFragment extends Fragment {
         ConnectivityManager connManager = (ConnectivityManager) getActivity().getSystemService(getContext().CONNECTIVITY_SERVICE);
         NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
 
-        ibAddJournal = view.findViewById(R.id.ibAddJournal);
         rvJournals = view.findViewById(R.id.rvJournals);
 
         allJournals = new ArrayList<>();
@@ -114,17 +112,6 @@ public class ComposeFragment extends Fragment {
                 android.R.color.holo_green_light,
                 android.R.color.holo_orange_light,
                 android.R.color.holo_red_light);
-
-        ibAddJournal.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (wifi.isConnected()) {
-                    Intent intent = new Intent(getContext(), ComposeJournal.class);
-                    startActivity(intent);
-                } else{
-                    Toast.makeText(getContext(), "Please connect to the internet", Toast.LENGTH_LONG).show();
-                }
-            }});
     }
 
 
