@@ -70,7 +70,6 @@ public class MainActivity extends AppCompatActivity {
                     fragmentToShow = feedFragment;
                     break;
                 case R.id.action_profile:
-                    profileFragment.user = (User) ParseUser.getCurrentUser();
                     fragmentToShow = profileFragment;
                     break;
                 default: break;
@@ -78,15 +77,15 @@ public class MainActivity extends AppCompatActivity {
             if (fragmentToShow != null) {
                 getSupportFragmentManager().beginTransaction().replace(R.id.flContainer, fragmentToShow).commit();
             }
-            fragmentManager.beginTransaction().replace(R.id.flContainer, fragmentToShow).commit();
             return true;
         });
         bottomNavigationView.setSelectedItemId(R.id.action_home);
     }
 
-    public void goToProfileFragment(User user) {
+    public void goToProfileFragment(ParseUser user) {
         // makes sure the profile navigation leads to the user whose image was selected
-        profileFragment.user = (User) user;
         bottomNavigationView.setSelectedItemId(R.id.action_profile);
+        profileFragment.user = (User) user;
     }
+
 }

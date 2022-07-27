@@ -22,7 +22,6 @@ import com.example.journeyjournal.ParseConnectorFiles.Post;
 import com.example.journeyjournal.ParseConnectorFiles.Reminder;
 import com.example.journeyjournal.ParseConnectorFiles.User;
 import com.example.journeyjournal.R;
-import com.parse.DeleteCallback;
 import com.parse.FindCallback;
 import com.parse.ParseException;
 import com.parse.ParseQuery;
@@ -31,7 +30,6 @@ import com.parse.ParseUser;
 import java.util.ArrayList;
 import java.util.List;
 
-@SuppressWarnings("deprecation")
 public class RemindersActivity extends AppCompatActivity {
     private static final String TAG = "RemindersActivity";
     RecyclerView rvReminders;
@@ -45,7 +43,15 @@ public class RemindersActivity extends AppCompatActivity {
     @Override
     public void onResume() {
         super.onResume();
-        whichQuery();
+        ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        if(wifi.isConnected()){
+            // query posts from the database
+            Log.i(TAG, "onResume");
+            adapter.clear();
+            queryReminders();
+        } else {
+            querySavedReminders();}
     }
 
     @Override
@@ -60,7 +66,11 @@ public class RemindersActivity extends AppCompatActivity {
         ivReminder.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                goComposeReminder();
+                if (wifi.isConnected()) {
+                    goComposeReminder();
+                } else{
+                    Toast.makeText(RemindersActivity.this, "Please connect to the internet", Toast.LENGTH_LONG).show();
+                }
             }
         });
 
@@ -75,15 +85,20 @@ public class RemindersActivity extends AppCompatActivity {
         // set the layout manager on RV
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         rvReminders.setLayoutManager(linearLayoutManager);
-        //query reminders
-        whichQuery();
-    }
+        //query comments from Parse
+        if(wifi.isConnected()){
+            // query posts from the database
+            Log.i(TAG, "either");
+            adapter.clear();
+            queryReminders();
+        } else {
+            querySavedReminders();}    }
 
     private void goComposeReminder() {
-        Intent intent = new Intent(this, ComposeReminder.class);
-        startActivity(intent);
-        overridePendingTransition(R.anim.right_in, R.anim.left_out);
-    }
+            Intent intent = new Intent(this, ComposeReminder.class);
+            startActivity(intent);
+            overridePendingTransition(R.anim.right_in, R.anim.left_out);
+        }
 
     private void queryReminders() {
         // specify type of data to query - Reminder.class
@@ -92,30 +107,21 @@ public class RemindersActivity extends AppCompatActivity {
         query.include(Reminder.KEY_USER);
         // limit query to latest 20 reminders
         query.setLimit(20);
-        query.setSkip(0);
         query.whereEqualTo(Reminder.KEY_USER, user);
+
         // order reminders by create (newest first)
         query.addDescendingOrder("createdAt");
         // start asynchronous call for reminders
         query.findInBackground(new FindCallback<Reminder>() {
             @Override
             public void done(List<Reminder> reminders, ParseException e) {
-
-                // Remove the previously cached results.
-                Reminder.unpinAllInBackground("Reminders", new DeleteCallback() {
-                    public void done(ParseException e) {
-                        // Cache the new results.
-                        Post.pinAllInBackground("Reminders", reminders);
-                    }
-                });
-
                 // check for failure
                 if (e != null) {
                     Log.e(TAG, "Failure to load reminders", e);
                     return;
                 }
                 // prints every reminder description for debugging purposes
-                for (Reminder reminder : reminders) {
+                for (Reminder reminder : reminders){
                     Log.i(TAG, "Reminder: " + reminder.getReminder() + ", username: " + reminder.getUser().getUsername());
                 }
 
@@ -127,43 +133,28 @@ public class RemindersActivity extends AppCompatActivity {
         });
     }
 
-    protected void querySavedReminders() {
+    private void querySavedReminders(){
         ParseQuery<Reminder> query = ParseQuery.getQuery(Reminder.class);
         query.include(Reminder.KEY_USER);
-        query.setLimit(20);
-        query.setSkip(0);
         query.whereEqualTo(Reminder.KEY_USER, user);
+        query.fromLocalDatastore();
         query.addDescendingOrder("createdAt");
-        query.fromLocalDatastore().ignoreACLs();
         query.findInBackground(new FindCallback<Reminder>() {
             @Override
             public void done(List<Reminder> reminders, ParseException e) {
-                Log.i(TAG, reminders.toString());
-
+                // check for failure
                 if (e != null) {
-                    Log.e(TAG, "Issue getting reminders.", e);
+                    Log.e(TAG, "Failure to load saved reminders", e);
                     return;
                 }
-
-                // at this point, we have gotten the reminders successfully
-                for (Reminder reminder : reminders) {
+                // prints every reminder description for debugging purposes
+                for (Reminder reminder : reminders){
                     Log.i(TAG, "Reminder: " + reminder.getReminder() + ", username: " + reminder.getUser().getUsername());
                 }
-
+                // save received reminders to list and notify adapter of change
                 allReminders.clear();
                 allReminders.addAll(reminders);
                 adapter.notifyDataSetChanged();
-            }
-        });
-    }
-
-    private void whichQuery() {
-        ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-        if (wifi.isConnected()) {
-            queryReminders();
-        } else {
-            querySavedReminders();
-        }
+            }});
     }
 }
