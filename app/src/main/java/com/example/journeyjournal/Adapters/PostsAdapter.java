@@ -123,7 +123,7 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.ViewHolder> 
                 @Override
                 public void onClick(View v) {
                     MainActivity activity = (MainActivity) context;
-                    activity.goToProfileFragment(post.getUser());
+                    activity.goToProfileFragment((User) post.getUser());
                 }
             });
 

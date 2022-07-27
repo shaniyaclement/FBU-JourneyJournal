@@ -86,7 +86,7 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.ViewHo
                 @Override
                 public void onClick(View v) {
                     MainActivity activity = (MainActivity) context;
-                    activity.goToProfileFragment(comment.getCommenter());
+                    activity.goToProfileFragment((User) comment.getCommenter());
                 }
             });
         }

@@ -95,7 +95,7 @@ public class ProfileFragment extends HelperFragment {
         NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
 
         if (getActivity() == null) {
-            Log.i(TAG, "grtActivity() is null");
+            Log.i(TAG, "getActivity() is null");
             return;
         } else {
             Log.i(TAG, "getActivity() is not null");
