@@ -62,9 +62,9 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.ViewHo
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             // initializes elements
-            tvUsername = (TextView) itemView.findViewById(R.id.tvUsername);
-            tvComment = (TextView) itemView.findViewById(R.id.tvPost);
-            ivProfileImage = (ImageView) itemView.findViewById(R.id.ivProfileImage);
+            tvUsername = itemView.findViewById(R.id.tvUsername);
+            tvComment = itemView.findViewById(R.id.tvPost);
+            ivProfileImage = itemView.findViewById(R.id.ivProfileImage);
         }
 
         public void bind(Comment comment) {
@@ -77,14 +77,16 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.ViewHo
 
             ParseFile profileImage = user.getProfileImage();
             if (profileImage != null) {
-                Glide.with(context).load(profileImage.getUrl()).circleCrop().into(ivProfileImage);}
+                Glide.with(context).load(profileImage.getUrl()).
+                        circleCrop().into(ivProfileImage);
+            }
 
             // clicking on profile pic --> profile page
             ivProfileImage.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     MainActivity activity = (MainActivity) context;
-                    activity.goToProfileFragment(comment.getCommenter());
+                    activity.goToProfileFragment((User) comment.getCommenter());
                 }
             });
         }

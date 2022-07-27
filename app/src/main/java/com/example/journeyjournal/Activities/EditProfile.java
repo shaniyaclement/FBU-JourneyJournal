@@ -62,8 +62,10 @@ public class EditProfile extends AppCompatActivity {
         if (profileImage != null) {
             Glide.with(this).load(profileImage.getUrl())
                     .circleCrop()
-                    .into(ivProfileImageEdit);}
-
+                    .into(ivProfileImageEdit);
+        }
+        etEditUsername.setText(user.getUsername());
+        etEditBio.setText(user.getBio());
         tvCancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -84,12 +86,25 @@ public class EditProfile extends AppCompatActivity {
         tvComplete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                user.setUsername(etEditUsername.getText().toString());
-                user.saveInBackground();
-                user.setBio(etEditBio.getText().toString());
-                user.saveInBackground();
-                etEditUsername.setText("");
-                etEditBio.setText("");
+                String username = etEditUsername.getText().toString();
+                if (username.isEmpty()) {
+                    Log.i(TAG, "NO NAME CHANGE");
+                } else {
+                    user.setUsername(etEditUsername.getText().toString());
+                }
+                String bio = etEditBio.getText().toString();
+                if (bio.isEmpty()) {
+                    Log.i(TAG, "NO BIO CHANGE");
+                } else {
+                    user.setBio(etEditBio.getText().toString());
+                }
+//                user.saveInBackground();
+                etEditUsername.setText(user.getUsername());
+                etEditBio.setText(user.getBio());
+                //saves to local database
+                user.pinInBackground("UserInfo");
+                //saves change to parse when there is internet
+                user.saveEventually();
                 finish();
             }
         });
@@ -114,8 +129,9 @@ public class EditProfile extends AppCompatActivity {
             startActivityForResult(intent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
         }
         Throwable e = null;
-        if(e != null){
-            Log.e(TAG, "Error launching camera", e);}
+        if (e != null) {
+            Log.e(TAG, "Error launching camera", e);
+        }
     }
 
     // adds image to imageView if photo is taken
@@ -146,7 +162,7 @@ public class EditProfile extends AppCompatActivity {
         File mediaStorageDir = new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), TAG);
 
         // Create the storage directory if it does not exist
-        if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()){
+        if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
             Log.d(TAG, "failed to create directory");
         }
 

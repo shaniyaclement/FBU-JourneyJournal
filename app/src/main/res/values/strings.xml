@@ -19,5 +19,8 @@
     <string name="location_icon">Location Icon</string>
     <string name="notes">Notes</string>
     <string name="click_to_select_date">Click to select date</string>
+    <string name="profileImage">ProfileImage</string>
+    <string name="post">post</string>
+    <string name="add_a_comment">Add a comment...</string>
 
 </resources>

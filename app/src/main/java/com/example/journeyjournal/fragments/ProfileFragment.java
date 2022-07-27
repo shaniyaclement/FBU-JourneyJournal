@@ -29,6 +29,7 @@ import com.example.journeyjournal.ParseConnectorFiles.User;
 import com.example.journeyjournal.ParseConnectorFiles.Post;
 import com.example.journeyjournal.Adapters.ProfileAdapter;
 import com.example.journeyjournal.R;
+import com.parse.DeleteCallback;
 import com.parse.FindCallback;
 import com.parse.ParseException;
 import com.parse.ParseFile;
@@ -62,7 +63,8 @@ public class ProfileFragment extends HelperFragment {
     TextView tvFollowingNum;
 
 
-    public ProfileFragment() {}
+    public ProfileFragment() {
+    }
 
     @Override
     public void onResume() {
@@ -92,16 +94,15 @@ public class ProfileFragment extends HelperFragment {
         ConnectivityManager connManager = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
 
-        if(getActivity() == null){
-            Log.i(TAG, "grtActivity() is null");
+        if (getActivity() == null) {
+            Log.i(TAG, "getActivity() is null");
             return;
-        } else{
+        } else {
             Log.i(TAG, "getActivity() is not null");
 
         }
 
         allPosts = new ArrayList<>();
-
         adapter = new ProfileAdapter(getContext(), allPosts);
         rvProfile.setAdapter(adapter);
 
@@ -121,12 +122,8 @@ public class ProfileFragment extends HelperFragment {
         btnEditProfile.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(wifi.isConnected()){
-                    Intent intent = new Intent(getContext(), EditProfile.class);
-                    startActivity(intent);
-                } else {
-                    Toast.makeText(getContext(), "Please connect to the internet", Toast.LENGTH_LONG).show();
-                }
+                Intent intent = new Intent(getContext(), EditProfile.class);
+                startActivity(intent);
             }
         });
 
@@ -135,29 +132,27 @@ public class ProfileFragment extends HelperFragment {
         swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                if(wifi.isConnected()){
+                if (wifi.isConnected()) {
                     queryPosts();
                 } else {
                     querySavedPosts();
-                }            }
+                }
+            }
         });
 
         swipeContainer.setColorSchemeResources(android.R.color.holo_blue_bright,
                 android.R.color.holo_green_light,
                 android.R.color.holo_orange_light,
                 android.R.color.holo_red_light);
-        if(wifi.isConnected()){
-            queryPosts();
-        } else {
-            querySavedPosts();
-        }
+        querySavedPosts();
+
 
         ivProfileImageProfile.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 ConnectivityManager connManager = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
                 NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-                if(wifi.isConnected()){
+                if (wifi.isConnected()) {
                     launchCamera();
                 } else {
                     Toast.makeText(getContext(), "Please connect to the internet", Toast.LENGTH_LONG).show();
@@ -177,7 +172,8 @@ public class ProfileFragment extends HelperFragment {
         if (profileImage != null) {
             Glide.with(this).load(profileImage.getUrl())
                     .circleCrop()
-                    .into(ivProfileImageProfile);}
+                    .into(ivProfileImageProfile);
+        }
 
         if (user != ParseUser.getCurrentUser()) {
             btnFollow.setVisibility(View.VISIBLE);
@@ -201,6 +197,15 @@ public class ProfileFragment extends HelperFragment {
         query.findInBackground(new FindCallback<Post>() {
             @Override
             public void done(List<Post> posts, ParseException e) {
+
+                // Remove the previously cached results.
+                Post.unpinAllInBackground("Posts", new DeleteCallback() {
+                    public void done(ParseException e) {
+                        // Cache the new results.
+                        Post.pinAllInBackground("Posts", posts);
+                    }
+                });
+
                 swipeContainer.setRefreshing(false);
 
                 if (e != null) {
@@ -237,7 +242,7 @@ public class ProfileFragment extends HelperFragment {
         ParseQuery<Post> query = ParseQuery.getQuery(Post.class);
         query.include(Post.KEY_USER);
         query.whereEqualTo(Post.KEY_USER, user);
-        query.addDescendingOrder("createdAt");
+        query.addDescendingOrder(Post.KEY_CREATED_AT);
         query.fromLocalDatastore();
         query.findInBackground(new FindCallback<Post>() {
             @Override

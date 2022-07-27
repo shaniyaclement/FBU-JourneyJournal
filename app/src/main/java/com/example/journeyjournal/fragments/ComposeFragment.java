@@ -23,7 +23,10 @@ import android.widget.Toast;
 import com.example.journeyjournal.Activities.ComposeJournal;
 import com.example.journeyjournal.ParseConnectorFiles.Journals;
 import com.example.journeyjournal.Adapters.JournalsAdapter;
+import com.example.journeyjournal.ParseConnectorFiles.Post;
+import com.example.journeyjournal.ParseConnectorFiles.Reminder;
 import com.example.journeyjournal.R;
+import com.parse.DeleteCallback;
 import com.parse.FindCallback;
 import com.parse.ParseException;
 import com.parse.ParseQuery;
@@ -32,6 +35,7 @@ import com.parse.ParseUser;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("ALL")
 public class ComposeFragment extends Fragment {
 
     private static final String TAG = "ComposeFragment";
@@ -49,15 +53,9 @@ public class ComposeFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        ConnectivityManager connManager = (ConnectivityManager) requireActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-        if(wifi.isConnected()){
-            // query posts from the database
-            Log.i(TAG, "onResume");
-            adapter.clear();
-            queryJournals();
-        } else {
-            querySavedJournals();}
+        Log.i(TAG, "onResume");
+        adapter.clear();
+        querySavedJournals();
     }
 
     @Override
@@ -71,9 +69,6 @@ public class ComposeFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        ConnectivityManager connManager = (ConnectivityManager) getActivity().getSystemService(getContext().CONNECTIVITY_SERVICE);
-        NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-
         ibAddJournal = view.findViewById(R.id.ibAddJournal);
         rvJournals = view.findViewById(R.id.rvJournals);
 
@@ -85,10 +80,7 @@ public class ComposeFragment extends Fragment {
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
         rvJournals.setLayoutManager(linearLayoutManager);
         // query posts from Parse SDK if there is wifi
-        if(wifi.isConnected()){
-            queryJournals();
-        } else {
-            querySavedJournals();}
+        querySavedJournals();
 
         swipeContainer = (SwipeRefreshLayout) view.findViewById(R.id.swipeContainer);
         // Setup refresh listener which triggers new data loading
@@ -98,15 +90,7 @@ public class ComposeFragment extends Fragment {
                 // Your code to refresh the list here.
                 // Make sure you call swipeContainer.setRefreshing(false)
                 // once the network request has completed successfully.
-                ConnectivityManager connManager = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
-                NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-                if(wifi.isConnected()){
-                    // query posts from the database
-                    Log.i(TAG, "onResume");
-                    adapter.clear();
-                    queryJournals();
-                } else {
-                    querySavedJournals();}
+                whichQuery();
             }
         });
         // Configure the refreshing colors
@@ -118,13 +102,10 @@ public class ComposeFragment extends Fragment {
         ibAddJournal.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (wifi.isConnected()) {
-                    Intent intent = new Intent(getContext(), ComposeJournal.class);
-                    startActivity(intent);
-                } else{
-                    Toast.makeText(getContext(), "Please connect to the internet", Toast.LENGTH_LONG).show();
-                }
-            }});
+                Intent intent = new Intent(getActivity(), ComposeJournal.class);
+                startActivity(intent);
+            }
+        });
     }
 
 
@@ -135,27 +116,36 @@ public class ComposeFragment extends Fragment {
         query.include(Journals.KEY_USER);
         // limit query to latest 20 items
         query.setLimit(20);
+        query.setSkip(0);
         query.whereEqualTo(Journals.KEY_USER, ParseUser.getCurrentUser());
         // order posts by creation date (newest first)
         query.addDescendingOrder("createdAt");
-        // start an asynchronous call for posts
+        // start an asynchronous call for journals
         query.findInBackground(new FindCallback<Journals>() {
             @Override
             public void done(List<Journals> journals, ParseException e) {
+
+                // Remove the previously cached results.
+                Journals.unpinAllInBackground("Journals", new DeleteCallback() {
+                    public void done(ParseException e) {
+                        // Cache the new results.
+                        Journals.pinAllInBackground("Reminders", journals);
+                    }
+                });
+
                 // check for errors
                 if (e != null) {
-                    Log.e(TAG, "Issue with getting posts", e);
+                    Log.e(TAG, "Issue with getting journals", e);
                     return;
                 }
 
-                // for debugging purposes let's print every post description to logcat
+                // for debugging purposes let's print every journal description to logcat
                 for (Journals journal : journals) {
-                    Log.i(TAG, "Post: " + journal.getTitle() + ", username: " + journal.getUser().getUsername());
+                    Log.i(TAG, "Journal: " + journal.getTitle() + ", username: " + journal.getUser().getUsername());
                 }
 
-                // save received posts to list and notify adapter of new data
+                // save received journals to list and notify adapter of new data
                 allJournals.clear();
-                adapter.notifyDataSetChanged();
                 allJournals.addAll(journals);
                 adapter.notifyDataSetChanged();
                 swipeContainer.setRefreshing(false);
@@ -164,31 +154,42 @@ public class ComposeFragment extends Fragment {
         });
     }
 
-    private void querySavedJournals(){
+    private void querySavedJournals() {
         ParseQuery<Journals> query = ParseQuery.getQuery(Journals.class);
         query.include(Journals.KEY_USER);
         query.whereEqualTo(Journals.KEY_USER, ParseUser.getCurrentUser());
-        query.fromLocalDatastore();
+        query.setSkip(0);
+        query.fromLocalDatastore().ignoreACLs();
         query.addDescendingOrder("createdAt");
         query.findInBackground(new FindCallback<Journals>() {
             @Override
             public void done(List<Journals> journal, ParseException e) {
                 // check for failure
                 if (e != null) {
-                    Log.e(TAG, "Failure to load saved reminders", e);
+                    Log.e(TAG, "Failure to load saved journals", e);
                     return;
                 }
-                // prints every reminder description for debugging purposes
-                for (Journals journals : journal){
+                // prints every journal description for debugging purposes
+                for (Journals journals : journal) {
                     Log.i(TAG, "Journal: " + journals.getEntry() + ", username: " + journals.getUser().getUsername());
                     Log.i(TAG, "Saved in database");
                 }
-                // save received comments to list and notify adapter of change
+                // save received journals to list and notify adapter of change
                 allJournals.clear();
                 allJournals.addAll(journal);
                 adapter.notifyDataSetChanged();
                 swipeContainer.setRefreshing(false);
-
             }
-    });}
+        });
+    }
+
+    private void whichQuery() {
+        ConnectivityManager connManager = (ConnectivityManager) requireActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        if (wifi.isConnected()) {
+            queryJournals();
+        } else {
+            querySavedJournals();
+        }
+    }
 }
