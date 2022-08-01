@@ -4,9 +4,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.Window;
 import android.view.WindowManager;
 
@@ -80,6 +82,27 @@ public class MainActivity extends AppCompatActivity {
             return true;
         });
         bottomNavigationView.setSelectedItemId(R.id.action_profile);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle item selection
+        switch (item.getItemId()) {
+            case R.id.new_post:
+                goComposePost();
+                return true;
+            case R.id.new_journal:
+                goComposeJournal();
+                return true;
+            case R.id.new_reminder:
+                goComposeReminder();
+                return true;
+            case R.id.logout:
+                logout();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     public void goToProfileFragment(ParseUser user) {
