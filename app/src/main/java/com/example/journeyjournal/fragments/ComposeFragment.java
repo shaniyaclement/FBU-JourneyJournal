@@ -40,7 +40,6 @@ public class ComposeFragment extends Fragment {
 
     private static final String TAG = "ComposeFragment";
     private SwipeRefreshLayout swipeContainer;
-    ImageButton ibAddJournal;
     RecyclerView rvJournals;
     protected JournalsAdapter adapter;
     protected List<Journals> allJournals;
@@ -69,7 +68,6 @@ public class ComposeFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        ibAddJournal = view.findViewById(R.id.ibAddJournal);
         rvJournals = view.findViewById(R.id.rvJournals);
 
         allJournals = new ArrayList<>();
@@ -98,14 +96,6 @@ public class ComposeFragment extends Fragment {
                 android.R.color.holo_green_light,
                 android.R.color.holo_orange_light,
                 android.R.color.holo_red_light);
-
-        ibAddJournal.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(getActivity(), ComposeJournal.class);
-                startActivity(intent);
-            }
-        });
     }
 
 
