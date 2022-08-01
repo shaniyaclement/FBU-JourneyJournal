@@ -79,13 +79,34 @@ public class MainActivity extends AppCompatActivity {
             }
             return true;
         });
-        bottomNavigationView.setSelectedItemId(R.id.action_home);
+        bottomNavigationView.setSelectedItemId(R.id.action_profile);
     }
 
     public void goToProfileFragment(ParseUser user) {
         // makes sure the profile navigation leads to the user whose image was selected
         bottomNavigationView.setSelectedItemId(R.id.action_profile);
         profileFragment.user = (User) user;
+    }
+
+    public void goComposePost(){
+        Intent intent = new Intent(this, ComposePostActivity.class);
+        startActivity(intent);
+    }
+
+    public void goComposeJournal(){
+        Intent intent = new Intent(this, ComposeJournal.class);
+        startActivity(intent);
+    }
+
+    public void logout(){
+        ParseUser.logOut();
+        Intent intent = new Intent(this, LoginActivity.class);
+        startActivity(intent);
+        this.finish();
+    }
+    public void goComposeReminder(){
+        Intent intent = new Intent(this, ComposeReminder.class);
+        startActivity(intent);
     }
 
 }
