@@ -2,6 +2,7 @@ package com.example.journeyjournal.ParseConnectorFiles;
 
 import com.parse.ParseClassName;
 import com.parse.ParseFile;
+import com.parse.ParseGeoPoint;
 import com.parse.ParseUser;
 
 
@@ -11,6 +12,7 @@ public class User extends ParseUser {
     public static final String KEY_PROFILE_PIC = "profilePic";
     public static final String KEY_USERNAME = "username";
     public static final String KEY_BIO = "bio";
+    public static final String KEY_LOCATION = "location";
 
     public ParseFile getProfileImage() {
         return getParseFile(KEY_PROFILE_PIC);
@@ -34,6 +36,14 @@ public class User extends ParseUser {
 
     public void setBio(String bio) {
         put(KEY_BIO, bio);
+    }
+
+    public ParseGeoPoint getLocation() {
+        return getParseGeoPoint(KEY_LOCATION);
+    }
+
+    public void setLocation(ParseGeoPoint location) {
+        put(KEY_LOCATION, location);
     }
 
 }

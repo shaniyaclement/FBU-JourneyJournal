@@ -4,9 +4,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.Window;
 import android.view.WindowManager;
 
@@ -70,7 +72,6 @@ public class MainActivity extends AppCompatActivity {
                     fragmentToShow = feedFragment;
                     break;
                 case R.id.action_profile:
-                    profileFragment.user = (User) ParseUser.getCurrentUser();
                     fragmentToShow = profileFragment;
                     break;
                 default: break;
@@ -78,15 +79,57 @@ public class MainActivity extends AppCompatActivity {
             if (fragmentToShow != null) {
                 getSupportFragmentManager().beginTransaction().replace(R.id.flContainer, fragmentToShow).commit();
             }
-            fragmentManager.beginTransaction().replace(R.id.flContainer, fragmentToShow).commit();
             return true;
         });
-        bottomNavigationView.setSelectedItemId(R.id.action_home);
-    }
-
-    public void goToProfileFragment(User user) {
-        // makes sure the profile navigation leads to the user whose image was selected
-        profileFragment.user = (User) user;
         bottomNavigationView.setSelectedItemId(R.id.action_profile);
     }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle item selection
+        switch (item.getItemId()) {
+            case R.id.new_post:
+                goComposePost();
+                return true;
+            case R.id.new_journal:
+                goComposeJournal();
+                return true;
+            case R.id.new_reminder:
+                goComposeReminder();
+                return true;
+            case R.id.logout:
+                logout();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    public void goToProfileFragment(ParseUser user) {
+        // makes sure the profile navigation leads to the user whose image was selected
+        bottomNavigationView.setSelectedItemId(R.id.action_profile);
+        profileFragment.user = (User) user;
+    }
+
+    public void goComposePost(){
+        Intent intent = new Intent(this, ComposePostActivity.class);
+        startActivity(intent);
+    }
+
+    public void goComposeJournal(){
+        Intent intent = new Intent(this, ComposeJournal.class);
+        startActivity(intent);
+    }
+
+    public void logout(){
+        ParseUser.logOut();
+        Intent intent = new Intent(this, LoginActivity.class);
+        startActivity(intent);
+        this.finish();
+    }
+    public void goComposeReminder(){
+        Intent intent = new Intent(this, ComposeReminder.class);
+        startActivity(intent);
+    }
+
 }
