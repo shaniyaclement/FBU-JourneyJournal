@@ -74,9 +74,6 @@ public class MainActivity extends AppCompatActivity {
                 case R.id.action_profile:
                     fragmentToShow = profileFragment;
                     break;
-                case R.id.action_menu:
-                    fragmentToShow = profileFragment;
-                    break;
                 default: break;
             }
             if (fragmentToShow != null) {
@@ -84,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
             }
             return true;
         });
-        bottomNavigationView.setSelectedItemId(R.id.action_home);
+        bottomNavigationView.setSelectedItemId(R.id.action_profile);
     }
 
     @Override
