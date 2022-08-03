@@ -39,7 +39,7 @@ public class PostDetails extends AppCompatActivity {
         // query posts from the database
         Log.i(TAG, "onResume");
         adapter.clear();
-        whichQuery();
+        queryNetworkOrLocal();
     }
 
     @Override
@@ -55,12 +55,12 @@ public class PostDetails extends AppCompatActivity {
         rvProfile.setAdapter(adapter);
         // set the layout manager on the recycler view
         rvProfile.setLayoutManager(new LinearLayoutManager(this));
-        whichQuery();
+        queryNetworkOrLocal();
 
 
         swipeContainer = findViewById(R.id.swipeContainer);
         // Setup refresh listener which triggers new data loading
-        swipeContainer.setOnRefreshListener(this::whichQuery);
+        swipeContainer.setOnRefreshListener(this::queryNetworkOrLocal);
         // Configure the refreshing colors
         swipeContainer.setColorSchemeResources(android.R.color.holo_blue_bright,
                 android.R.color.holo_green_light,
@@ -69,44 +69,44 @@ public class PostDetails extends AppCompatActivity {
 
     }
 
-    private void queryPosts() {
-        // specify what type of data we want to query - Post.class
+    protected void queryNetwork() {
         ParseQuery<Post> query = ParseQuery.getQuery(Post.class);
-        // include data referred by user key
+
         query.include(Post.KEY_USER);
+        query.whereEqualTo(Post.KEY_USER, user);
+
         query.setLimit(20);
         query.setSkip(0);
-        // order posts by creation date (newest first)
+
         query.addDescendingOrder(Post.KEY_CREATED_AT);
-        // start an asynchronous call for posts
-        query.findInBackground((posts, e) -> {
 
-            // Remove the previously cached results.
-            Post.unpinAllInBackground("Posts", new DeleteCallback() {
-                public void done(ParseException e) {
-                    // Cache the new results.
-                    Post.pinAllInBackground("Posts", posts);
+        query.findInBackground(new FindCallback<Post>() {
+            @Override
+            public void done(List<Post> posts, ParseException e) {
+
+                if (e != null) {
+                    Log.e(TAG, "Issue getting posts.", e);
+                    return;
                 }
-            });
 
-            if (e != null) {
-                Log.e(TAG, "Issue with getting posts", e);
-                return;
+                // at this point, we have gotten the posts successfully
+                for (Post post : posts) {
+                    Log.i(TAG, "Post: " + post.getDescription() + ", username: " + post.getUser().getUsername());
+                }
+
+                allPosts.clear();
+                allPosts.addAll(posts);
+                adapter.notifyDataSetChanged();
+                swipeContainer.setRefreshing(false);
+
             }
-            for (Post post : posts) {
-                Log.i(TAG, "Post: " + post.getDescription() + ", username: " + post.getUser().getUsername());
-            }
-            // save received posts to list and notify adapter of new data
-            allPosts.clear();
-            allPosts.addAll(posts);
-            adapter.notifyDataSetChanged();
-            swipeContainer.setRefreshing(false);
         });
     }
 
-    protected void querySavedPosts() {
+    protected void queryLocal() {
         ParseQuery<Post> query = ParseQuery.getQuery(Post.class);
         query.include(Post.KEY_USER);
+        query.whereEqualTo(Post.KEY_USER, user);
         query.addDescendingOrder(Post.KEY_CREATED_AT);
         query.fromLocalDatastore();
         query.findInBackground(new FindCallback<Post>() {
@@ -128,17 +128,20 @@ public class PostDetails extends AppCompatActivity {
                 allPosts.addAll(posts);
                 adapter.notifyDataSetChanged();
                 swipeContainer.setRefreshing(false);
+
+
             }
         });
     }
 
-    private void whichQuery() {
+    private void queryNetworkOrLocal() {
         ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+
         if (wifi.isConnected()) {
-            queryPosts();
+            queryNetwork();
         } else {
-            querySavedPosts();
+            queryLocal();
         }
     }
 }

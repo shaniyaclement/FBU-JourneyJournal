@@ -12,8 +12,8 @@
         <entry key="app/src/main/res/layout-v31/fragment_home.xml" value="0.3280141843971631" />
         <entry key="app/src/main/res/layout/activity_app.xml" value="0.1702127659574468" />
         <entry key="app/src/main/res/layout/activity_calendar.xml" value="0.38958333333333334" />
-        <entry key="app/src/main/res/layout/activity_comment.xml" value="0.30835734870317005" />
-        <entry key="app/src/main/res/layout/activity_compose_journal.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/activity_comment.xml" value="0.335" />
+        <entry key="app/src/main/res/layout/activity_compose_journal.xml" value="0.165" />
         <entry key="app/src/main/res/layout/activity_compose_post.xml" value="0.25" />
         <entry key="app/src/main/res/layout/activity_compose_reminder.xml" value="0.335" />
         <entry key="app/src/main/res/layout/activity_edit_profile.xml" value="0.28936170212765955" />
@@ -30,7 +30,7 @@
         <entry key="app/src/main/res/layout/fragment_compose.xml" value="0.25" />
         <entry key="app/src/main/res/layout/fragment_feed.xml" value="0.3157894736842105" />
         <entry key="app/src/main/res/layout/fragment_helper.xml" value="0.15374873353596757" />
-        <entry key="app/src/main/res/layout/fragment_home.xml" value="0.375" />
+        <entry key="app/src/main/res/layout/fragment_home.xml" value="0.165" />
         <entry key="app/src/main/res/layout/fragment_home_ftagment.xml" value="0.19630192502532928" />
         <entry key="app/src/main/res/layout/fragment_profile.xml" value="0.375" />
         <entry key="app/src/main/res/layout/item_comment.xml" value="0.25" />

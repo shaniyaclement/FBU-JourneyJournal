@@ -23,6 +23,7 @@ import com.example.journeyjournal.ParseConnectorFiles.Post;
 import com.example.journeyjournal.ParseConnectorFiles.Reminder;
 import com.example.journeyjournal.ParseConnectorFiles.User;
 import com.example.journeyjournal.R;
+import com.example.journeyjournal.fragments.HomeFragment;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.libraries.places.api.Places;
@@ -35,13 +36,10 @@ import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.datepicker.MaterialPickerOnPositiveButtonClickListener;
 import com.parse.DeleteCallback;
 import com.parse.FindCallback;
-import com.parse.GetCallback;
 import com.parse.ParseException;
 import com.parse.ParseGeoPoint;
-import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
-import com.parse.SaveCallback;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -161,7 +159,7 @@ public class ComposeReminder extends AppCompatActivity {
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         rvReminders.setLayoutManager(linearLayoutManager);
         //query reminders from Parse
-        whichQuery();
+        queryNetworkOrLocal();
 
         tvDone.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -176,6 +174,7 @@ public class ComposeReminder extends AppCompatActivity {
                 }
                 location = new ParseGeoPoint(latitude, longitude);
                 addReminder(remind, notes, user, date, location);
+                finish();
             }
         });
     }
@@ -201,15 +200,12 @@ public class ComposeReminder extends AppCompatActivity {
         reminder.saveEventually();
         etRemind.setText("");
         etNotes.setText("");
-        tvDateEntry.setText("");
-        querySavedReminders();
-
-        Intent intent = new Intent(ComposeReminder.this, RemindersActivity.class);
-        startActivity(intent);
-        overridePendingTransition(R.anim.right_out, R.anim.left_in);
+        tvDateEntry.setText("Click to select date");
+        tvLocation.setText("Click to add location");
+        queryNetworkOrLocal();
     }
 
-    private void queryReminders() {
+    private void queryNetwork() {
         // specify type of data to query - Reminder.class
         ParseQuery<Reminder> query = ParseQuery.getQuery(Reminder.class);
         // include data referred by user key
@@ -251,7 +247,7 @@ public class ComposeReminder extends AppCompatActivity {
         });
     }
 
-    protected void querySavedReminders() {
+    protected void queryLocal() {
         ParseQuery<Reminder> query = ParseQuery.getQuery(Reminder.class);
         query.include(Reminder.KEY_USER);
         // limit query to latest 5 reminders
@@ -319,13 +315,13 @@ public class ComposeReminder extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
     }
 
-    private void whichQuery() {
+    private void queryNetworkOrLocal() {
         ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
         if (wifi.isConnected()) {
-            queryReminders();
+            queryNetwork();
         } else {
-            querySavedReminders();
+            queryLocal();
         }
     }
 

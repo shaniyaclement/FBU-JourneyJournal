@@ -23,7 +23,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.bumptech.glide.Glide;
-import com.example.journeyjournal.Activities.ComposePostActivity;
 import com.example.journeyjournal.Activities.EditProfile;
 import com.example.journeyjournal.ParseConnectorFiles.User;
 import com.example.journeyjournal.ParseConnectorFiles.Post;
@@ -74,6 +73,8 @@ public class ProfileFragment extends HelperFragment {
         tvProfileUsername.setText("");
         tvBio.setText("");
         displayUserInfo();
+        queryNetworkOrLocal();
+
     }
 
     @Override
@@ -91,16 +92,6 @@ public class ProfileFragment extends HelperFragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         rvProfile = view.findViewById(R.id.rvProfile);
-        ConnectivityManager connManager = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-
-        if (getActivity() == null) {
-            Log.i(TAG, "getActivity() is null");
-            return;
-        } else {
-            Log.i(TAG, "getActivity() is not null");
-
-        }
 
         allPosts = new ArrayList<>();
         adapter = new ProfileAdapter(getContext(), allPosts);
@@ -128,15 +119,12 @@ public class ProfileFragment extends HelperFragment {
         });
 
         rvProfile.setLayoutManager(gridLayoutManager);
+        queryNetworkOrLocal();
 
         swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                if (wifi.isConnected()) {
-                    queryPosts();
-                } else {
-                    querySavedPosts();
-                }
+                queryNetworkOrLocal();
             }
         });
 
@@ -144,7 +132,6 @@ public class ProfileFragment extends HelperFragment {
                 android.R.color.holo_green_light,
                 android.R.color.holo_orange_light,
                 android.R.color.holo_red_light);
-        querySavedPosts();
 
 
         ivProfileImageProfile.setOnClickListener(new View.OnClickListener() {
@@ -183,7 +170,7 @@ public class ProfileFragment extends HelperFragment {
         }
     }
 
-    protected void queryPosts() {
+    protected void queryNetwork() {
         ParseQuery<Post> query = ParseQuery.getQuery(Post.class);
 
         query.include(Post.KEY_USER);
@@ -197,16 +184,6 @@ public class ProfileFragment extends HelperFragment {
         query.findInBackground(new FindCallback<Post>() {
             @Override
             public void done(List<Post> posts, ParseException e) {
-
-                // Remove the previously cached results.
-                Post.unpinAllInBackground("Posts", new DeleteCallback() {
-                    public void done(ParseException e) {
-                        // Cache the new results.
-                        Post.pinAllInBackground("Posts", posts);
-                    }
-                });
-
-                swipeContainer.setRefreshing(false);
 
                 if (e != null) {
                     Log.e(TAG, "Issue getting posts.", e);
@@ -233,12 +210,13 @@ public class ProfileFragment extends HelperFragment {
                 allPosts.clear();
                 allPosts.addAll(posts);
                 adapter.notifyDataSetChanged();
+                swipeContainer.setRefreshing(false);
 
             }
         });
     }
 
-    protected void querySavedPosts() {
+    protected void queryLocal() {
         ParseQuery<Post> query = ParseQuery.getQuery(Post.class);
         query.include(Post.KEY_USER);
         query.whereEqualTo(Post.KEY_USER, user);
@@ -281,6 +259,16 @@ public class ProfileFragment extends HelperFragment {
         });
     }
 
+    private void queryNetworkOrLocal() {
+        ConnectivityManager connManager = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+
+        if (wifi.isConnected()) {
+            queryNetwork();
+        } else {
+            queryLocal();
+        }
+    }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {

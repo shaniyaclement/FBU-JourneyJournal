@@ -161,7 +161,6 @@ public class ComposePostActivity extends AppCompatActivity {
             return;
         }
         LocationServices.getFusedLocationProviderClient(this).requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.myLooper());
-        Toast.makeText(this, "Permission ok", Toast.LENGTH_SHORT).show();
 
     }
 
@@ -173,8 +172,6 @@ public class ComposePostActivity extends AppCompatActivity {
         longitude = location.getLongitude();
         ParseGeoPoint location1 = new ParseGeoPoint(latitude, longitude);
         currentUser.setLocation(location1);
-        String msg = "Updated Location: " + latitude + "," + longitude;
-        Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
     }
 
 

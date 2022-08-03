@@ -3,21 +3,14 @@ package com.example.journeyjournal.Activities;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.journeyjournal.Adapters.JournalsAdapter;
-import com.example.journeyjournal.Adapters.ReminderAdapter;
 import com.example.journeyjournal.ParseConnectorFiles.Journals;
-import com.example.journeyjournal.ParseConnectorFiles.Reminder;
 import com.example.journeyjournal.R;
 import com.example.journeyjournal.ShakeListener;
-import com.parse.ParseException;
 import com.parse.ParseUser;
-import com.parse.SaveCallback;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +20,7 @@ public class ComposeJournal extends AppCompatActivity implements ShakeListener.C
     public static final String TAG = "ComposeJournal";
     TextView etJournalTitle;
     TextView tvEntry;
-    Button btnAddEntry;
+    TextView addEntry;
     protected JournalsAdapter adapter;
     protected List<Journals> allJournals;
 
@@ -39,12 +32,12 @@ public class ComposeJournal extends AppCompatActivity implements ShakeListener.C
 
         tvEntry = findViewById(R.id.etEntry);
         etJournalTitle = findViewById(R.id.etJournalTitle);
-        btnAddEntry = findViewById(R.id.btnAddEntry);
+        addEntry = findViewById(R.id.addEntry);
 
         allJournals = new ArrayList<>();
         adapter = new JournalsAdapter(this, allJournals);
 
-        btnAddEntry.setOnClickListener(v -> {
+        addEntry.setOnClickListener(v -> {
             String title = etJournalTitle.getText().toString();
             String entry = tvEntry.getText().toString();
             if (title.isEmpty()) {
@@ -56,6 +49,7 @@ public class ComposeJournal extends AppCompatActivity implements ShakeListener.C
                 return;
             }
             saveJournal(title, entry);
+            finish();
         });
     }
 

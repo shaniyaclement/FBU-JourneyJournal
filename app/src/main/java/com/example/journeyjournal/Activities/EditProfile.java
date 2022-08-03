@@ -4,9 +4,12 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -77,8 +80,14 @@ public class EditProfile extends AppCompatActivity {
         tvProfileImageChange.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+                NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
                 // trigger a pop up that asks take photo or upload
-                launchCamera();
+                if (wifi.isConnected()){
+                    launchCamera();
+                } else{
+                    Toast.makeText(EditProfile.this, "Connect to internet to change image", Toast.LENGTH_LONG).show();
+                }
             }
         });
 
@@ -98,7 +107,6 @@ public class EditProfile extends AppCompatActivity {
                 } else {
                     user.setBio(etEditBio.getText().toString());
                 }
-//                user.saveInBackground();
                 etEditUsername.setText(user.getUsername());
                 etEditBio.setText(user.getBio());
                 //saves to local database

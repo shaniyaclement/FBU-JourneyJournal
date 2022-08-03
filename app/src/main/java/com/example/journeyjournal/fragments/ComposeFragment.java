@@ -1,7 +1,6 @@
 package com.example.journeyjournal.fragments;
 
 import android.content.Context;
-import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
@@ -17,14 +16,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
-import android.widget.Toast;
 
-import com.example.journeyjournal.Activities.ComposeJournal;
 import com.example.journeyjournal.ParseConnectorFiles.Journals;
 import com.example.journeyjournal.Adapters.JournalsAdapter;
-import com.example.journeyjournal.ParseConnectorFiles.Post;
-import com.example.journeyjournal.ParseConnectorFiles.Reminder;
 import com.example.journeyjournal.R;
 import com.parse.DeleteCallback;
 import com.parse.FindCallback;
@@ -54,7 +48,7 @@ public class ComposeFragment extends Fragment {
         super.onResume();
         Log.i(TAG, "onResume");
         adapter.clear();
-        querySavedJournals();
+        queryNetworkOrLocal();
     }
 
     @Override
@@ -77,8 +71,8 @@ public class ComposeFragment extends Fragment {
         // set the layout manager on the recycler view
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
         rvJournals.setLayoutManager(linearLayoutManager);
-        // query posts from Parse SDK if there is wifi
-        querySavedJournals();
+        // query journals from Parse SDK if there is wifi
+        queryNetworkOrLocal();
 
         swipeContainer = (SwipeRefreshLayout) view.findViewById(R.id.swipeContainer);
         // Setup refresh listener which triggers new data loading
@@ -88,7 +82,7 @@ public class ComposeFragment extends Fragment {
                 // Your code to refresh the list here.
                 // Make sure you call swipeContainer.setRefreshing(false)
                 // once the network request has completed successfully.
-                whichQuery();
+                queryNetworkOrLocal();
             }
         });
         // Configure the refreshing colors
@@ -99,7 +93,7 @@ public class ComposeFragment extends Fragment {
     }
 
 
-    private void queryJournals() {
+    private void queryNetwork() {
         // specify what type of data we want to query - Journals.class
         ParseQuery<Journals> query = ParseQuery.getQuery(Journals.class);
         // include data referred by user key
@@ -108,20 +102,25 @@ public class ComposeFragment extends Fragment {
         query.setLimit(20);
         query.setSkip(0);
         query.whereEqualTo(Journals.KEY_USER, ParseUser.getCurrentUser());
-        // order posts by creation date (newest first)
+        // order journals by creation date (newest first)
         query.addDescendingOrder("createdAt");
         // start an asynchronous call for journals
         query.findInBackground(new FindCallback<Journals>() {
             @Override
             public void done(List<Journals> journals, ParseException e) {
-
                 // Remove the previously cached results.
                 Journals.unpinAllInBackground("Journals", new DeleteCallback() {
                     public void done(ParseException e) {
-                        // Cache the new results.
-                        Journals.pinAllInBackground("Reminders", journals);
+                        if (e != null) {
+                            Log.e(TAG, "Issue with unpinning journals", e);
+                            return;
+                        }
                     }
                 });
+
+                // Cache the new results.
+                Journals.pinAllInBackground("Journals", journals);
+                Log.i(TAG, journals.toString());
 
                 // check for errors
                 if (e != null) {
@@ -144,7 +143,7 @@ public class ComposeFragment extends Fragment {
         });
     }
 
-    private void querySavedJournals() {
+    private void queryLocal() {
         ParseQuery<Journals> query = ParseQuery.getQuery(Journals.class);
         query.include(Journals.KEY_USER);
         query.whereEqualTo(Journals.KEY_USER, ParseUser.getCurrentUser());
@@ -173,13 +172,13 @@ public class ComposeFragment extends Fragment {
         });
     }
 
-    private void whichQuery() {
+    private void queryNetworkOrLocal() {
         ConnectivityManager connManager = (ConnectivityManager) requireActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
         if (wifi.isConnected()) {
-            queryJournals();
+            queryNetwork();
         } else {
-            querySavedJournals();
+            queryLocal();
         }
     }
 }

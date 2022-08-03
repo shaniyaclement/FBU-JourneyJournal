@@ -43,9 +43,6 @@
             android:name=".Activities.ComposeReminder"
             android:exported="false" />
         <activity
-            android:name=".Activities.RemindersActivity"
-            android:exported="false" />
-        <activity
             android:name=".Activities.CommentActivity"
             android:exported="false" />
         <activity

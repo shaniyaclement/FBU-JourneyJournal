@@ -2,7 +2,6 @@ package com.example.journeyjournal.Activities;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
@@ -11,10 +10,12 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.bumptech.glide.Glide;
 import com.example.journeyjournal.Adapters.CommentsAdapter;
@@ -22,13 +23,13 @@ import com.example.journeyjournal.ParseConnectorFiles.Comment;
 import com.example.journeyjournal.ParseConnectorFiles.Post;
 import com.example.journeyjournal.ParseConnectorFiles.User;
 import com.example.journeyjournal.R;
-import com.example.journeyjournal.fragments.FeedFragment;
 import com.parse.DeleteCallback;
 import com.parse.FindCallback;
 import com.parse.ParseException;
 import com.parse.ParseFile;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
+import com.parse.SaveCallback;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +41,7 @@ public class CommentActivity extends AppCompatActivity {
     RecyclerView rvComments;
     protected CommentsAdapter adapter;
     protected List<Comment> allComments;
+    private SwipeRefreshLayout swipeContainer;
 
     public User user = (User) ParseUser.getCurrentUser();
     Post post;
@@ -51,6 +53,9 @@ public class CommentActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_comment);
+
+        ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
 
         rvComments = findViewById(R.id.rvComments);
 
@@ -67,7 +72,19 @@ public class CommentActivity extends AppCompatActivity {
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         rvComments.setLayoutManager(linearLayoutManager);
         //query comments
-        whichQuery();
+        queryNetworkOrLocal();
+
+        swipeContainer = findViewById(R.id.swipeContainer);
+        // Setup refresh listener which triggers new data loading
+        // Your code to refresh the list here.
+        // Make sure you call swipeContainer.setRefreshing(false)
+        // once the network request has completed successfully.
+        swipeContainer.setOnRefreshListener(this::queryNetworkOrLocal);
+        // Configure the refreshing colors
+        swipeContainer.setColorSchemeResources(android.R.color.holo_blue_bright,
+                android.R.color.holo_green_light,
+                android.R.color.holo_orange_light,
+                android.R.color.holo_red_light);
 
         ParseFile profileImage = user.getProfileImage();
         if (profileImage != null) {
@@ -80,9 +97,14 @@ public class CommentActivity extends AppCompatActivity {
         tvPost.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                saveComment();
+                if (wifi.isConnected()) {
+                    saveComment();
+                } else {
+                    Toast.makeText(CommentActivity.this, "Can not add comment without internet", Toast.LENGTH_LONG).show();
+                }
             }
         });
+
     }
 
     private void saveComment() {
@@ -91,17 +113,24 @@ public class CommentActivity extends AppCompatActivity {
         comment.setComment(etComment.getText().toString());
         comment.setPost(post);
         comment.setCommenter(ParseUser.getCurrentUser());
-
         etComment.setText("");
 
         // saves data in data store with label
         comment.pinInBackground("Comments");
         // saves change to parse when there is internet
-        comment.saveEventually();
-        whichQuery();
+        comment.saveInBackground(new SaveCallback() {
+            @Override
+            public void done(ParseException e) {
+                if (e != null) {
+                    Log.e(TAG, "Error while saving", e);
+                    Toast.makeText(CommentActivity.this, "Error while saving", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+        queryNetworkOrLocal();
     }
 
-    private void queryComments() {
+    private void queryNetwork() {
         // specify type of data to query - Comments.class
         ParseQuery<Comment> query = ParseQuery.getQuery(Comment.class);
         // include data referred by user key
@@ -140,11 +169,12 @@ public class CommentActivity extends AppCompatActivity {
                 allComments.clear();
                 allComments.addAll(comments);
                 adapter.notifyDataSetChanged();
+                swipeContainer.setRefreshing(false);
             }
         });
     }
 
-    protected void querySavedComments() {
+    protected void queryLocal() {
         ParseQuery<Comment> query = ParseQuery.getQuery(Comment.class);
         query.include(Post.KEY_USER);
         query.addDescendingOrder(Post.KEY_CREATED_AT);
@@ -177,16 +207,17 @@ public class CommentActivity extends AppCompatActivity {
                 allComments.clear();
                 allComments.addAll(comments);
                 adapter.notifyDataSetChanged();
+                swipeContainer.setRefreshing(false);
             }
         });
     }
 
-    private void whichQuery() {
+    private void queryNetworkOrLocal() {
         ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
         if(wifi.isConnected()){
-            queryComments();
+            queryNetwork();
         } else {
-            querySavedComments();}
+            queryLocal();}
     }
 }

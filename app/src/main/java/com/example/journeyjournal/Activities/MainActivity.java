@@ -114,11 +114,13 @@ public class MainActivity extends AppCompatActivity {
     public void goComposePost(){
         Intent intent = new Intent(this, ComposePostActivity.class);
         startActivity(intent);
+        overridePendingTransition(R.anim.left_out, R.anim.right_in);
     }
 
     public void goComposeJournal(){
         Intent intent = new Intent(this, ComposeJournal.class);
         startActivity(intent);
+        overridePendingTransition(R.anim.left_out, R.anim.right_in);
     }
 
     public void logout(){
@@ -130,6 +132,7 @@ public class MainActivity extends AppCompatActivity {
     public void goComposeReminder(){
         Intent intent = new Intent(this, ComposeReminder.class);
         startActivity(intent);
+        overridePendingTransition(R.anim.left_out, R.anim.right_in);
     }
 
 }

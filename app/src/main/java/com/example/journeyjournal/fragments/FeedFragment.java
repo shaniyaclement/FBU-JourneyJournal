@@ -3,7 +3,6 @@ package com.example.journeyjournal.fragments;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.ConnectivityManager;
@@ -23,13 +22,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
-import android.widget.Toast;
 
-import com.example.journeyjournal.Activities.ComposePostActivity;
 import com.example.journeyjournal.ParseConnectorFiles.Post;
 import com.example.journeyjournal.Adapters.PostsAdapter;
-import com.example.journeyjournal.Activities.LoginActivity;
 import com.example.journeyjournal.ParseConnectorFiles.User;
 import com.example.journeyjournal.R;
 import com.google.android.gms.location.LocationCallback;
@@ -80,7 +75,7 @@ public class FeedFragment extends Fragment {
         // query posts from the database
         Log.i(TAG, "onResume");
         adapter.clear();
-        whichQuery();
+        queryNetworkOrLocal();
         if (wifi.isConnected()) {
             startLocationUpdates();
         }
@@ -104,13 +99,14 @@ public class FeedFragment extends Fragment {
         rvPosts.setAdapter(adapter);
         // set the layout manager on the recycler view
         rvPosts.setLayoutManager(new LinearLayoutManager(getContext()));
+        queryNetworkOrLocal();
 
         swipeContainer = view.findViewById(R.id.swipeContainer);
         // Setup refresh listener which triggers new data loading
         // Your code to refresh the list here.
         // Make sure you call swipeContainer.setRefreshing(false)
         // once the network request has completed successfully.
-        swipeContainer.setOnRefreshListener(this::whichQuery);
+        swipeContainer.setOnRefreshListener(this::queryNetworkOrLocal);
         // Configure the refreshing colors
         swipeContainer.setColorSchemeResources(android.R.color.holo_blue_bright,
                 android.R.color.holo_green_light,
@@ -163,8 +159,6 @@ public class FeedFragment extends Fragment {
             return;
         }
         LocationServices.getFusedLocationProviderClient(requireActivity()).requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.myLooper());
-        Toast.makeText(getActivity(), "Permission ok", Toast.LENGTH_SHORT).show();
-
     }
 
     public void onLocationChanged(Location location) {
@@ -172,17 +166,41 @@ public class FeedFragment extends Fragment {
         double longitude = location.getLongitude();
         ParseGeoPoint location1 = new ParseGeoPoint(latitude, longitude);
         currentUser.setLocation(location1);
-        String msg = "Updated Location: " + latitude + "," + longitude;
-        Toast.makeText(getActivity(), msg, Toast.LENGTH_LONG).show();
     }
 
+    private void postCaching(){
+        // specify what type of data we want to query - Post.class
+        ParseQuery<Post> query = ParseQuery.getQuery(Post.class);
+        // include data referred by user key
+        query.include(Post.KEY_USER);
+        query.setSkip(0);
+        // order posts by creation date (newest first)
+        query.addDescendingOrder(Post.KEY_CREATED_AT);
+        // start an asynchronous call for posts
+        query.findInBackground(new FindCallback<Post>() {
+            @SuppressLint("NotifyDataSetChanged")
+            @Override
+            public void done(List<Post> posts, ParseException e) {
+                Log.i(TAG, posts.toString());
 
-    private void goNewPost() {
-        Intent intent = new Intent(getActivity(), ComposePostActivity.class);
-        startActivity(intent);
+                // Remove the previously cached results.
+                Post.unpinAllInBackground("Posts", new DeleteCallback() {
+                    public void done(ParseException e) {
+                        if (e != null) {
+                            Log.e(TAG, "Issue with unpinning posts", e);
+                            return;
+                        }
+                    }
+                });
+
+                // Cache the new results.
+                Post.pinAllInBackground("Posts", posts);
+                Log.i(TAG, posts.toString());
+            }
+        });
     }
 
-    private void queryPosts() {
+    private void queryNetwork() {
         // specify what type of data we want to query - Post.class
         ParseQuery<Post> query = ParseQuery.getQuery(Post.class);
         // include data referred by user key
@@ -201,22 +219,6 @@ public class FeedFragment extends Fragment {
             @SuppressLint("NotifyDataSetChanged")
             @Override
             public void done(List<Post> posts, ParseException e) {
-                Log.i(TAG, posts.toString());
-
-                // Remove the previously cached results.
-                Post.unpinAllInBackground("Posts", new DeleteCallback() {
-                    public void done(ParseException e) {
-                        if (e != null) {
-                            Log.e(TAG, "Issue with unpinning posts", e);
-                            return;
-                        }
-                        // Cache the new results.
-                        Log.i(TAG, "posts deleted and added");
-                        Post.pinAllInBackground("Posts", posts);
-                        Log.i(TAG, posts.toString());
-                    }
-                });
-
                 if (e != null) {
                     Log.e(TAG, "Issue with getting posts", e);
                     return;
@@ -233,11 +235,15 @@ public class FeedFragment extends Fragment {
         });
     }
 
-    protected void querySavedPosts() {
+    protected void queryLocal() {
         ParseQuery<Post> query = ParseQuery.getQuery(Post.class);
         query.include(Post.KEY_USER);
         query.addDescendingOrder(Post.KEY_CREATED_AT);
         query.fromLocalDatastore();
+        // query posts that were created within 25 miles of the user location
+        query.whereWithinMiles(Post.KEY_LOCATION, currentUser.getLocation(), 25.0);
+        // order posts by creation date (newest first)
+        query.addDescendingOrder(Post.KEY_CREATED_AT);
         query.findInBackground(new FindCallback<Post>() {
             @SuppressLint("NotifyDataSetChanged")
             @Override
@@ -262,14 +268,15 @@ public class FeedFragment extends Fragment {
         });
     }
 
-    private void whichQuery() {
+    private void queryNetworkOrLocal() {
         ConnectivityManager connManager = (ConnectivityManager) requireActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
         if (wifi.isConnected()) {
-            queryPosts();
+            postCaching();
+            queryNetwork();
             startLocationUpdates();
         } else {
-            querySavedPosts();
+            queryLocal();
         }
     }
 

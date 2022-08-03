@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:padding="8dp"
     tools:context=".Activities.ComposeJournal">
 
     <EditText
@@ -15,10 +16,11 @@
         android:ems="10"
         android:hint="Journal Title"
         android:inputType="textPersonName"
+        android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        tools:layout_editor_absoluteY="-3dp" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <com.google.android.material.textfield.TextInputEditText
         android:id="@+id/etEntry"
@@ -28,21 +30,25 @@
         android:layout_alignStart="@+id/etJournalTitle"
         android:layout_alignParentEnd="true"
         android:hint="What's on your mind?"
+        android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/etJournalTitle" />
 
-    <Button
-        android:id="@+id/btnAddEntry"
+    <TextView
+        android:id="@+id/addEntry"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/etEntry"
         android:layout_centerHorizontal="true"
         android:text="Add Entry"
+        android:textColor="@color/themeTan"
+        android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/etEntry"
         tools:layout_centerInParent="true" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
