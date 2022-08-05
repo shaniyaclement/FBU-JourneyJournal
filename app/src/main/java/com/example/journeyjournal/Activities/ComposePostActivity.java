@@ -28,6 +28,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.ImageDecoder;
 import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -44,6 +45,7 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,7 +56,7 @@ public class ComposePostActivity extends AppCompatActivity {
     private static final int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 42;
     private static final int PICK_PHOTO_CODE = 1046;
     EditText etDescription;
-    Button btnImage;
+    Button btnCapture;
     Button btnUpload;
     Button btnPost;
     ImageView ivImage;
@@ -86,7 +88,7 @@ public class ComposePostActivity extends AppCompatActivity {
 
 
         etDescription = findViewById(R.id.etDescription);
-        btnImage = findViewById(R.id.btnImage);
+        btnCapture = findViewById(R.id.btnImage);
         btnUpload = findViewById(R.id.btnUpload);
         btnPost = findViewById(R.id.btnPost);
         ivImage = findViewById(R.id.ivImage);
@@ -107,20 +109,56 @@ public class ComposePostActivity extends AppCompatActivity {
                     return;
                 }
                 if (wifi.isConnected()) {
-                    savePost(description, currentUser, photoFile);
+                    savePost(description, currentUser);
                     finish();
                 } else {
                     Toast.makeText(ComposePostActivity.this, "Can not add post without internet", Toast.LENGTH_LONG).show();
                 }
             }
         });
-        btnImage.setOnClickListener(new View.OnClickListener() {
+        btnCapture.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 launchCamera();
             }
         });
+        btnUpload.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onUploadPhoto();
+            }
+        });
     }
+
+    @SuppressWarnings("deprecation")
+    private void onUploadPhoto() {
+        // Create intent for picking a photo from the gallery
+        Intent intent = new Intent(Intent.ACTION_PICK,
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+
+        // If you call startActivityForResult() using an intent that no app can handle, your app will crash.
+        // So as long as the result is not null, it's safe to use the intent.
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            // Bring up gallery to select a photo
+            startActivityForResult(intent, PICK_PHOTO_CODE);
+        } else{
+            Log.i("Upload", "No launch");
+        }
+    }
+
+    public Bitmap loadFromUri(Uri photoUri) {
+        Bitmap image = null;
+        try {
+            // check version of Android on device
+            // on newer versions of Android, use the new decodeBitmap method
+            ImageDecoder.Source source = ImageDecoder.createSource(this.getContentResolver(), photoUri);
+            image = ImageDecoder.decodeBitmap(source);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return image;
+    }
+
 
     @Override
     protected void onStart() {
@@ -213,7 +251,7 @@ public class ComposePostActivity extends AppCompatActivity {
     }
 
     // create a new post and saves to app
-    private void savePost(String description, User currentUser, File photoFile) {
+    private void savePost(String description, User currentUser) {
         Post post = new Post();
         post.setDescription(description);
         post.setImage(new ParseFile(this.photoFile));
@@ -253,6 +291,17 @@ public class ComposePostActivity extends AppCompatActivity {
                 } else { // Result was a failure
                     Toast.makeText(this, "Picture wasn't taken!", Toast.LENGTH_SHORT).show();
                 }
+            case (PICK_PHOTO_CODE):
+                if ((data != null)) {
+                    Uri photoUri = data.getData();
+
+                    // load the image located at photoUri into selectedImage
+                    Bitmap selectedImage = loadFromUri(photoUri);
+
+                    // load image into the preview
+                    ivImage.setImageBitmap(selectedImage);
+                }
+                break;
             default:
                 Log.i(TAG, "default case");
                 break;
